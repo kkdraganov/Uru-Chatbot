@@ -1,0 +1,78 @@
+app_name: uru-chatgpt-interface
+instance: ${INSTANCE_NAME}
+services:
+  - name: frontend
+    type: web
+    tech: nextjs
+    domain: dynamosoftware.${INSTANCE}.com
+    https: true
+    port: 3000
+    dockerfile: ./frontend/Dockerfile
+    env:
+      - NEXT_PUBLIC_API_URL=https://api.dynamosoftware.${INSTANCE}.com
+    resources:
+      cpu: 1
+      memory: 1G
+
+  - name: backend
+    type: api
+    tech: python
+    domain: api.dynamosoftware.${INSTANCE}.com
+    https: true
+    port: 8000
+    dockerfile: ./backend/Dockerfile
+    env:
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
+      - SECRET_KEY=${JWT_SECRET}
+      - ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - CORS_ORIGINS=https://dynamosoftware.${INSTANCE}.com
+    resources:
+      cpu: 1
+      memory: 1G
+
+  - name: db
+    type: database
+    tech: postgresql
+    version: 14
+    env:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+    resources:
+      cpu: 0.5
+      memory: 1G
+    volumes:
+      - data:/var/lib/postgresql/data
+
+env_variables:
+  - name: JWT_SECRET
+    description: Secret key for JWT token generation
+    required: true
+    generate: true
+    type: string
+    length: 32
+
+  - name: DB_USER
+    description: Database username
+    required: true
+    default: postgres
+    type: string
+
+  - name: DB_PASSWORD
+    description: Database password
+    required: true
+    generate: true
+    type: password
+    length: 16
+
+  - name: DB_NAME
+    description: Database name
+    required: true
+    default: uru_chatbot
+    type: string
+
+  - name: INSTANCE_NAME
+    description: Instance name for subdomain
+    required: true
+    type: string
