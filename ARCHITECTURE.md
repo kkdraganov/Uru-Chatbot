@@ -1075,7 +1075,7 @@ networks:
 
 ```yaml
 # elestio.yml
-app_name: uru-chatgpt-interface
+app_name: uru-chatbot
 instance: ${INSTANCE_NAME}
 services:
   - name: frontend

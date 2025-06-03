@@ -39,7 +39,7 @@ The Uru ChatGPT Interface is a web application that allows clients to use their 
 ## Project Structure
 
 ```
-uru-chatgpt-interface/
+uru-chatbot/
 ├── backend/                    # FastAPI application
 │   ├── app/
 │   │   ├── adapters/          # AI provider abstractions
@@ -77,62 +77,9 @@ uru-chatgpt-interface/
 
 ```bash
 git clone <repository-url>
-cd uru-chatgpt-interface
+cd uru-chatbot
 ```
 
 2. **Set up the backend**
 
-```bash
-cd backend
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
 ```
-
-3. **Set up the frontend**
-
-```bash
-cd frontend
-npm install
-```
-
-4. **Start the development servers**
-
-Backend:
-```bash
-cd backend
-uvicorn app.main:app --reload
-```
-
-Frontend:
-```bash
-cd frontend
-npm run dev
-```
-
-### Production Deployment with Elestio
-
-1. **Set up Elestio account**
-
-2. **Configure environment variables**
-   - See `deployment/ENV_VARS.md` for required variables
-
-3. **Deploy using Elestio CLI**
-
-```bash
-elestio deploy -f deployment/elestio.yml
-```
-
-## Security Considerations
-
-- **API Key Handling**: Client-side only, encrypted localStorage, HTTPS transmission
-- **No Data Persistence**: Store conversation metadata only, never message content
-- **Rate Limiting**: Prevent abuse of client API keys
-- **Input Validation**: Comprehensive sanitization
-
-## Additional Documentation
-
-- `ARCHITECTURE.md`: Detailed architecture design
-- `VALIDATION.md`: Security and streaming validation checklist
-- `SECURITY_VALIDATION_REPORT.md`: Security validation results
-- `deployment/ENV_VARS.md`: Environment variables documentation
