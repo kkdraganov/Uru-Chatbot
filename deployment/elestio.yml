@@ -45,6 +45,22 @@ services:
     volumes:
       - data:/var/lib/postgresql/data
 
+  - name: nginx
+    type: web
+    tech: nginx
+    domain: nginx.${INSTANCE}.com
+    https: true
+    port: 80
+    dockerfile: ./nginx/Dockerfile
+    resources:
+      cpu: 0.5
+      memory: 512M
+    ports:
+      - target: 80
+        published: 80
+        protocol: http
+        public: true
+
 env_variables:
   - name: JWT_SECRET
     description: Secret key for JWT token generation

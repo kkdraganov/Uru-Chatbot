@@ -47,9 +47,6 @@ services:
 
   nginx:
     image: nginx:alpine
-    ports:
-      - "80:80"
-      - "443:443"
     volumes:
       - ./deployment/nginx:/etc/nginx/conf.d
       - ./deployment/certbot/conf:/etc/letsencrypt
