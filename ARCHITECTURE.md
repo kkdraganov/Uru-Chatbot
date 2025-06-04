@@ -1076,7 +1076,7 @@ networks:
 ```yaml
 # elestio.yml
 app_name: uru-chatbot
-instance: ${INSTANCE_NAME}
+instance: ${INSTANCE}
 services:
   - name: frontend
     type: web
@@ -1149,7 +1149,7 @@ env_variables:
     default: uru_chatbot
     type: string
 
-  - name: INSTANCE_NAME
+  - name: INSTANCE
     description: Instance name for subdomain
     required: true
     type: string

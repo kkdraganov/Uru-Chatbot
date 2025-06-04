@@ -1,5 +1,5 @@
 app_name: uru-chatbot
-instance: ${INSTANCE_NAME}
+instance: ${INSTANCE}
 services:
   - name: frontend
     type: web
@@ -45,22 +45,6 @@ services:
     volumes:
       - data:/var/lib/postgresql/data
 
-  - name: nginx
-    type: web
-    tech: nginx
-    domain: nginx.${INSTANCE}.com
-    https: true
-    port: 80
-    dockerfile: ./nginx/Dockerfile
-    resources:
-      cpu: 0.5
-      memory: 512M
-    ports:
-      - target: 80
-        published: 80
-        protocol: http
-        public: true
-
 env_variables:
   - name: JWT_SECRET
     description: Secret key for JWT token generation
@@ -88,7 +72,18 @@ env_variables:
     default: uru_chatbot
     type: string
 
-  - name: INSTANCE_NAME
+  - name: INSTANCE
     description: Instance name for subdomain
     required: true
     type: string
+
+customDomains:
+  - hostname: dynamosoftware.${INSTANCE}.com
+    service: nginx
+    port: 80
+    https: true
+
+  - hostname: api.dynamosoftware.${INSTANCE}.com
+    service: backend
+    port: 8000
+    https: true
