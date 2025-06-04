@@ -26,7 +26,7 @@ services:
       - SECRET_KEY=${JWT_SECRET}
       - ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
-      - CORS_ORIGINS=["https://dynamosoftware.${INSTANCE}.com"]
+      - CORS_ORIGINS=["https://dynamosoftware.${INSTANCE}.com","https://api.dynamosoftware.${INSTANCE}.com"]
     depends_on:
       - db
     networks:
@@ -48,27 +48,17 @@ services:
   nginx:
     image: nginx:alpine
     ports:
-      - "8080:8080"
-      - "8443:8443"
+      - "80:80"
     environment:
       - INSTANCE=${INSTANCE}
     volumes:
       - ./deployment/nginx/default.conf.template:/etc/nginx/templates/default.conf.template
-      - ./deployment/certbot/conf:/etc/letsencrypt
-      - ./deployment/certbot/www:/var/www/certbot
     depends_on:
       - frontend
       - backend
     networks:
       - app-network
     restart: always
-
-  certbot:
-    image: certbot/certbot
-    volumes:
-      - ./deployment/certbot/conf:/etc/letsencrypt
-      - ./deployment/certbot/www:/var/www/certbot
-    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 volumes:
   postgres_data:
