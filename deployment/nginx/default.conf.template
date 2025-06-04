@@ -1,5 +1,5 @@
 server {
-    listen 80;
+    listen 8080;
     server_name dynamosoftware.${INSTANCE}.com;
     
     location / {
@@ -12,7 +12,7 @@ server {
 }
 
 server {
-    listen 443 ssl;
+    listen 8443 ssl;
     server_name dynamosoftware.${INSTANCE}.com;
     
     ssl_certificate /etc/letsencrypt/live/dynamosoftware.${INSTANCE}.com/fullchain.pem;
@@ -28,7 +28,7 @@ server {
 }
 
 server {
-    listen 80;
+    listen 8080;
     server_name api.dynamosoftware.${INSTANCE}.com;
     
     location / {
@@ -41,7 +41,7 @@ server {
 }
 
 server {
-    listen 443 ssl;
+    listen 8443 ssl;
     server_name api.dynamosoftware.${INSTANCE}.com;
     
     ssl_certificate /etc/letsencrypt/live/api.dynamosoftware.${INSTANCE}.com/fullchain.pem;

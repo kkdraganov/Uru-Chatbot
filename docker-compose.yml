@@ -53,7 +53,7 @@ services:
     environment:
       - INSTANCE=${INSTANCE}
     volumes:
-      - ./deployment/nginx:/etc/nginx/conf.d
+      - ./deployment/nginx/default.conf.template:/etc/nginx/templates/default.conf.template
       - ./deployment/certbot/conf:/etc/letsencrypt
       - ./deployment/certbot/www:/var/www/certbot
     depends_on:
