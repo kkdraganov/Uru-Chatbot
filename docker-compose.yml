@@ -26,7 +26,7 @@ services:
       - SECRET_KEY=${JWT_SECRET}
       - ALGORITHM=HS256
       - ACCESS_TOKEN_EXPIRE_MINUTES=30
-      - CORS_ORIGINS='["https://dynamosoftware.${INSTANCE}.com"]'
+      - CORS_ORIGINS=["https://dynamosoftware.${INSTANCE}.com"]
     depends_on:
       - db
     networks:
@@ -47,6 +47,11 @@ services:
 
   nginx:
     image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - INSTANCE=${INSTANCE}
     volumes:
       - ./deployment/nginx:/etc/nginx/conf.d
       - ./deployment/certbot/conf:/etc/letsencrypt
