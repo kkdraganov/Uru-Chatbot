@@ -80,7 +80,7 @@ env_variables:
 customDomains:
   - hostname: dynamosoftware.${INSTANCE}.com
     service: nginx
-    port: 80
+    port: 8080
     https: true
 
   - hostname: api.dynamosoftware.${INSTANCE}.com
