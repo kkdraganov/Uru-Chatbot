@@ -2,6 +2,7 @@ from pydantic_settings import BaseSettings
 from typing import List, Optional
 import os
 from dotenv import load_dotenv
+import json
 
 # Load environment variables from .env file if it exists
 load_dotenv()
@@ -19,10 +20,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
     # CORS settings
-    CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",  # Local development
-        "https://dynamosoftware.elestio.app"  # Production
-    ]
+    CORS_ORIGINS: List[str] = json.loads(os.getenv("CORS_ORIGINS", "[\"http://localhost:3000\"]"))
     
     # Database settings
     DATABASE_URL: str = os.getenv(
