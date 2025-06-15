@@ -28,7 +28,7 @@ services:
     environment:
       - SECRET_KEY=${SECRET_KEY:-development_secret_key}
       - INSTANCE=${INSTANCE:-dev}
-      - DATABASE_URL="postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-uru_chatbot}"
+      - DATABASE_URL=postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-uru_chatbot}
       - CORS_ORIGINS=["https://${INSTANCE}.uruenterprises.com","https://api.${INSTANCE}.uruenterprises.com"]
       - ENVIRONMENT=${ENVIRONMENT:-production}
     depends_on:
