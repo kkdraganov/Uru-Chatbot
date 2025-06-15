@@ -8,19 +8,19 @@ The deployment uses Elestio's standard Docker Compose deployment with environmen
 
 | Variable | Elestio Value | Description |
 |----------|---------------|-------------|
-| **INSTANCE** | `dynamosoftware.chat-dev` | Instance identifier for domain construction |
+| **INSTANCE** | `[INSTANCE]` | Instance identifier from Elestio hosting environment variables |
 | **SECRET_KEY** | `random_password` | Auto-generated JWT secret |
 | **POSTGRES_USER** | `postgres` | Database username |
 | **POSTGRES_PASSWORD** | `random_password` | Auto-generated database password |
 | **POSTGRES_DB** | `uru_chatbot` | Database name |
-| **DATABASE_URL** | Auto-constructed | Full database connection string |
+| **DATABASE_URL** | `postgresql+asyncpg://[POSTGRES_USER]:[POSTGRES_PASSWORD]@db:5432/[POSTGRES_DB]` | Full database connection string |
 | **NEXT_PUBLIC_API_URL** | `https://api.[INSTANCE].uruenterprises.com/api` | Frontend API endpoint (build-time) |
-| **CORS_ORIGINS** | Auto-configured JSON array | CORS allowed origins |
+| **CORS_ORIGINS** | `["https://[INSTANCE].uruenterprises.com","https://api.[INSTANCE].uruenterprises.com"]` | CORS allowed origins |
 | **NODE_ENV** | `production` | Node.js environment |
 
 ## Elestio Special Variables
 
-- `[INSTANCE]` - Replaced with the instance value at deployment time
+- `[CI_CD_DOMAIN]` - Replaced with the actual domain by Elestio
 - `[POSTGRES_USER]` - Replaced with database username
 - `[POSTGRES_PASSWORD]` - Replaced with generated password
 - `[POSTGRES_DB]` - Replaced with database name
@@ -35,9 +35,10 @@ The deployment uses Elestio's standard Docker Compose deployment with environmen
 ## Build-Time Variables
 
 The `NEXT_PUBLIC_API_URL` is required at build time for Next.js. Elestio handles this by:
-1. Injecting the variable into the `.env` file before build
-2. Passing it as a build arg to the Docker build process
-3. Using the `[INSTANCE]` placeholder for dynamic domain resolution
+1. Setting `INSTANCE` from `[CI_CD_DOMAIN]` placeholder
+2. Constructing `NEXT_PUBLIC_API_URL` using the `[INSTANCE]` placeholder
+3. Passing it as a build arg to the Docker build process
+4. The application falls back to localhost for development environments
 
 ## Security Notes
 

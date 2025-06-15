@@ -5,11 +5,20 @@ console.log('[NEXT_CONFIG] NEXT_PUBLIC_API_URL from env:', process.env.NEXT_PUBL
 console.log('[NEXT_CONFIG] INSTANCE from env:', process.env.INSTANCE);
 console.log('[NEXT_CONFIG] NODE_ENV from env:', process.env.NODE_ENV);
 
-// Determine API URL
-const apiUrl = process.env.NEXT_PUBLIC_API_URL ||
-  (process.env.INSTANCE && process.env.INSTANCE !== 'dev'
-    ? `https://api.${process.env.INSTANCE}.uruenterprises.com/api`
-    : 'http://localhost:8000/api');
+// Determine API URL with better fallback logic
+let apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+// If NEXT_PUBLIC_API_URL is not set or empty, construct it
+if (!apiUrl || apiUrl.trim() === '') {
+  const instance = process.env.INSTANCE;
+  if (instance && instance !== 'dev') {
+    // Production: use instance-based URL
+    apiUrl = `https://api.${instance}.uruenterprises.com/api`;
+  } else {
+    // Development: use localhost
+    apiUrl = 'http://localhost:8000/api';
+  }
+}
 
 // DEBUG: Log final API URL (next.config.js:api_url_final)
 console.log('[NEXT_CONFIG] Final API URL:', apiUrl);
@@ -23,13 +32,22 @@ const nextConfig = {
   images: {
     domains: (() => {
       const baseDomains = ['localhost'];
-      const instanceDomains = process.env.INSTANCE ? [
-        `${process.env.INSTANCE}.uruenterprises.com`,
-        `api.${process.env.INSTANCE}.uruenterprises.com`
-      ] : [
-        'dynamosoftware.dev.uruenterprises.com',
-        'api.dynamosoftware.dev.uruenterprises.com'
-      ];
+      const instance = process.env.INSTANCE;
+      let instanceDomains = [];
+
+      if (instance && instance !== 'dev') {
+        instanceDomains = [
+          `${instance}.uruenterprises.com`,
+          `api.${instance}.uruenterprises.com`
+        ];
+      } else {
+        // Development fallback
+        instanceDomains = [
+          'dynamosoftware.dev.uruenterprises.com',
+          'api.dynamosoftware.dev.uruenterprises.com'
+        ];
+      }
+
       const allDomains = [...baseDomains, ...instanceDomains];
       // DEBUG: Log image domains configuration (next.config.js:image_domains)
       console.log('[NEXT_CONFIG] Image domains configured:', allDomains);

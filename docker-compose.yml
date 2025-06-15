@@ -6,14 +6,14 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - NODE_ENV=${NODE_ENV}
-        - INSTANCE=${INSTANCE}
+        - NODE_ENV=${NODE_ENV:-production}
+        - INSTANCE=${INSTANCE:-dev}
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     ports:
       - "172.17.0.1:3000:3000"
     environment:
-      - NODE_ENV=${NODE_ENV}
-      - INSTANCE=${INSTANCE}
+      - NODE_ENV=${NODE_ENV:-production}
+      - INSTANCE=${INSTANCE:-dev}
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     depends_on:
       - backend
@@ -28,13 +28,15 @@ services:
     ports:
       - "172.17.0.1:8000:8000"
     environment:
-      - SECRET_KEY=${SECRET_KEY}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - INSTANCE=${INSTANCE}
+      - SECRET_KEY=${SECRET_KEY:-development_secret_key}
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-uru_chatbot}
+
+      - INSTANCE=${INSTANCE:-dev}
       - DATABASE_URL=${DATABASE_URL}
       - CORS_ORIGINS=${CORS_ORIGINS}
-      - NODE_ENV=${NODE_ENV}
+      - NODE_ENV=${NODE_ENV:-production}
     depends_on:
       - db
     restart: always

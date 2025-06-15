@@ -10,7 +10,7 @@ config:
 
 environments:
   - key: "INSTANCE"
-    value: "dynamosoftware.chat-dev"
+    value: "[INSTANCE]"
   - key: "SECRET_KEY"
     value: "random_password"
   - key: "POSTGRES_USER"
@@ -24,7 +24,7 @@ environments:
   - key: "NEXT_PUBLIC_API_URL"
     value: "https://api.[INSTANCE].uruenterprises.com/api"
   - key: "CORS_ORIGINS"
-    value: "[\"https://[INSTANCE].uruenterprises.com\",\"https://api.[INSTANCE].uruenterprises.com\"]"
+    value: ["https://[INSTANCE].uruenterprises.com","https://api.[INSTANCE].uruenterprises.com"]
   - key: "NODE_ENV"
     value: "production"
 

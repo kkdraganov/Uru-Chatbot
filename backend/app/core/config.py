@@ -51,9 +51,9 @@ class Settings(BaseSettings):
     # CORS settings - Auto-configured based on environment
     @property
     def CORS_ORIGINS(self) -> List[str]:
-        # Allow manual override
+        # Allow manual override from environment
         cors_env = os.getenv("CORS_ORIGINS")
-        if cors_env:
+        if cors_env and cors_env.strip():  # Check for non-empty string
             try:
                 parsed_cors = json.loads(cors_env)
                 # DEBUG: Log CORS origins from environment (config.py:CORS_ORIGINS)
@@ -64,7 +64,7 @@ class Settings(BaseSettings):
                 logger.info(f"[CONFIG] CORS_ORIGINS from env (single string): {cors_env}")
                 return [cors_env]
 
-        # Auto-configure based on environment
+        # Auto-configure based on environment when no env var or empty
         if self.is_production:
             auto_cors = [
                 f"https://{self.INSTANCE}.uruenterprises.com",
@@ -89,12 +89,14 @@ class Settings(BaseSettings):
     @property
     def DATABASE_URL(self) -> str:
         """Get async database URL."""
-        # Use environment variable if provided, otherwise construct from components
+        # Use environment variable if provided and not empty, otherwise construct from components
         env_url = os.getenv("DATABASE_URL")
-        if env_url:
+        if env_url and env_url.strip():  # Check for non-empty string
             # DEBUG: Log database URL from environment (config.py:DATABASE_URL)
             logger.info(f"[CONFIG] DATABASE_URL from environment: {env_url}")
             return env_url
+
+        # Construct from individual components when env var is empty or missing
         constructed_url = f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         # DEBUG: Log constructed database URL (config.py:DATABASE_URL)
         logger.info(f"[CONFIG] DATABASE_URL constructed: {constructed_url}")

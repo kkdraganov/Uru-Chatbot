@@ -31,6 +31,9 @@ This file tracks all debug console messages added for environment variable loggi
 
 ## Frontend Debug Messages
 
+### frontend/Dockerfile
+- **Line ~16**: `RUN echo "Build args - NODE_ENV: $NODE_ENV, INSTANCE: $INSTANCE, NEXT_PUBLIC_API_URL: $NEXT_PUBLIC_API_URL"`
+
 ### frontend/next.config.js
 - **Line ~4**: `console.log('[NEXT_CONFIG] NEXT_PUBLIC_API_URL from env:', process.env.NEXT_PUBLIC_API_URL);`
 - **Line ~5**: `console.log('[NEXT_CONFIG] INSTANCE from env:', process.env.INSTANCE);`

@@ -4,13 +4,16 @@ WORKDIR /app
 
 # Accept build arguments
 ARG NODE_ENV=production
-ARG INSTANCE=dynamosoftware.chat-dev
-ARG NEXT_PUBLIC_API_URL=https://api.dynamosoftware.chat-dev.uruenterprises.com/api
+ARG INSTANCE
+ARG NEXT_PUBLIC_API_URL
 
 # Set environment variables for build
 ENV NODE_ENV=$NODE_ENV
 ENV INSTANCE=$INSTANCE
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+# Debug: Log build args (will be removed before shipping)
+RUN echo "Build args - NODE_ENV: $NODE_ENV, INSTANCE: $INSTANCE, NEXT_PUBLIC_API_URL: $NEXT_PUBLIC_API_URL"
 
 # Copy package files
 COPY package*.json ./
