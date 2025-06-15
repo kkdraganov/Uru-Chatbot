@@ -42,10 +42,10 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         """Determine if running in production based on INSTANCE or explicit env var."""
-        node_env = os.getenv("NODE_ENV")
-        is_prod = node_env == "production" or self.INSTANCE != "dev"
+        environment = os.getenv("ENVIRONMENT")
+        is_prod = environment == "production" or self.INSTANCE != "dev"
         # DEBUG: Log production detection logic (config.py:is_production)
-        logger.info(f"[CONFIG] NODE_ENV: {node_env}, INSTANCE: {self.INSTANCE}, is_production: {is_prod}")
+        logger.info(f"[CONFIG] ENVIRONMENT: {environment}, INSTANCE: {self.INSTANCE}, is_production: {is_prod}")
         return is_prod
 
     # CORS settings - Auto-configured based on environment

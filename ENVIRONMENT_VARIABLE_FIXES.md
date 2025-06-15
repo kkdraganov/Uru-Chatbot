@@ -11,7 +11,7 @@
 - INSTANCE now comes through properly from Elestio's environment variables
 
 ### 2. Hardcoded Environment Variables Not Showing in Debug
-**Problem**: Variables like `POSTGRES_USER`, `POSTGRES_PASSWORD`, `NODE_ENV`, and `SECRET_KEY` that are hardcoded in Docker Compose weren't appearing in debug logs.
+**Problem**: Variables like `POSTGRES_USER`, `POSTGRES_PASSWORD`, `ENVIRONMENT`, and `SECRET_KEY` that are hardcoded in Docker Compose weren't appearing in debug logs.
 
 **Fix**:
 - Added default values in Docker Compose using `${VAR:-default}` syntax
@@ -64,7 +64,7 @@ def DATABASE_URL(self) -> str:
 ```yaml
 # Frontend build args with fallbacks
 args:
-  - NODE_ENV=${NODE_ENV:-production}
+  - ENVIRONMENT=${ENVIRONMENT:-production}
   - INSTANCE=${INSTANCE:-dev}
   - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 

@@ -4,13 +4,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        - NODE_ENV=${NODE_ENV:-production}
+        - ENVIRONMENT=${ENVIRONMENT:-production}
         - INSTANCE=${INSTANCE:-dev}
         - NEXT_PUBLIC_API_URL="https://api.${INSTANCE}.uruenterprises.com/api"
     ports:
       - "172.17.0.1:3000:3000"
     environment:
-      - NODE_ENV=${NODE_ENV:-production}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
       - INSTANCE=${INSTANCE:-dev}
       - NEXT_PUBLIC_API_URL="https://api.${INSTANCE}.uruenterprises.com/api"
     depends_on:
@@ -27,13 +27,13 @@ services:
       - "172.17.0.1:8000:8000"
     environment:
       - SECRET_KEY=${SECRET_KEY:-development_secret_key}
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-uru_chatbot}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=uru_chatbot
       - INSTANCE=${INSTANCE:-dev}
       - DATABASE_URL="postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}"
       - CORS_ORIGINS=["https://${INSTANCE}.uruenterprises.com","https://api.${INSTANCE}.uruenterprises.com"]
-      - NODE_ENV=${NODE_ENV:-production}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
     depends_on:
       - db
     restart: always
@@ -45,9 +45,9 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     environment:
-      - POSTGRES_USER=${POSTGRES_USER:-postgres}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
-      - POSTGRES_DB=${POSTGRES_DB:-uru_chatbot}
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=uru_chatbot
     restart: always
     env_file:
       - ./.env

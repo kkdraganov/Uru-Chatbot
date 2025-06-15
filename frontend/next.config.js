@@ -3,7 +3,7 @@
 // DEBUG: Log environment variables during Next.js config load (next.config.js:env_setup)
 console.log('[NEXT_CONFIG] NEXT_PUBLIC_API_URL from env:', process.env.NEXT_PUBLIC_API_URL);
 console.log('[NEXT_CONFIG] INSTANCE from env:', process.env.INSTANCE);
-console.log('[NEXT_CONFIG] NODE_ENV from env:', process.env.NODE_ENV);
+console.log('[NEXT_CONFIG] ENVIRONMENT from env:', process.env.ENVIRONMENT);
 
 // Determine API URL with better fallback logic
 let apiUrl = process.env.NEXT_PUBLIC_API_URL;
@@ -11,7 +11,8 @@ let apiUrl = process.env.NEXT_PUBLIC_API_URL;
 // If NEXT_PUBLIC_API_URL is not set or empty, construct it
 if (!apiUrl || apiUrl.trim() === '') {
   const instance = process.env.INSTANCE;
-  if (instance && instance !== 'dev') {
+  const environment = process.env.ENVIRONMENT;
+  if (environment && environment == 'production' && instance) {
     // Production: use instance-based URL
     apiUrl = `https://api.${instance}.uruenterprises.com/api`;
   } else {

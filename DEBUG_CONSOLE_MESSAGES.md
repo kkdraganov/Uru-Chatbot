@@ -37,7 +37,7 @@ This file tracks all debug console messages added for environment variable loggi
 ### frontend/next.config.js
 - **Line ~4**: `console.log('[NEXT_CONFIG] NEXT_PUBLIC_API_URL from env:', process.env.NEXT_PUBLIC_API_URL);`
 - **Line ~5**: `console.log('[NEXT_CONFIG] INSTANCE from env:', process.env.INSTANCE);`
-- **Line ~6**: `console.log('[NEXT_CONFIG] NODE_ENV from env:', process.env.NODE_ENV);`
+- **Line ~6**: `console.log('[NEXT_CONFIG] ENVIRONMENT from env:', process.env.ENVIRONMENT);`
 - **Line ~15**: `console.log('[NEXT_CONFIG] Final API URL:', apiUrl);`
 - **Line ~35**: `console.log('[NEXT_CONFIG] Image domains configured:', allDomains);`
 

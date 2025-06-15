@@ -25,7 +25,7 @@ environments:
     value: "https://api.[INSTANCE].uruenterprises.com/api"
   - key: "CORS_ORIGINS"
     value: ["https://[INSTANCE].uruenterprises.com","https://api.[INSTANCE].uruenterprises.com"]
-  - key: "NODE_ENV"
+  - key: "ENVIRONMENT"
     value: "production"
 
 ports:
