@@ -5,12 +5,16 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - NODE_ENV=production
+        - INSTANCE=${INSTANCE:-dev}
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
-      - INSTANCE=${INSTANCE:-dev}
       - NODE_ENV=production
+      - INSTANCE=${INSTANCE:-dev}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000/api}
     depends_on:
       - backend
     networks:

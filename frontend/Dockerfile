@@ -3,14 +3,19 @@ FROM node:18-alpine AS builder
 WORKDIR /app
 
 # Accept build arguments
-ARG NEXT_PUBLIC_API_URL
-ARG INSTANCE
 ARG NODE_ENV=production
+ARG INSTANCE
+ARG NEXT_PUBLIC_API_URL
 
 # Set environment variables for build
-ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
-ENV INSTANCE=$INSTANCE
 ENV NODE_ENV=$NODE_ENV
+ENV INSTANCE=$INSTANCE
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+# Debug: Print environment variables during build
+RUN echo "Build-time NODE_ENV: $NODE_ENV"
+RUN echo "Build-time INSTANCE: $INSTANCE"
+RUN echo "Build-time NEXT_PUBLIC_API_URL: $NEXT_PUBLIC_API_URL"
 
 # Copy package files
 COPY package*.json ./

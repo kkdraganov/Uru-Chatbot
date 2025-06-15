@@ -9,13 +9,13 @@ services:
     port: 3000
     dockerfile: ./frontend/Dockerfile
     build_args:
-      - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
-      - INSTANCE=${INSTANCE}
       - NODE_ENV=production
+      - INSTANCE=${INSTANCE}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     env:
-      - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
-      - INSTANCE=${INSTANCE}
       - NODE_ENV=production
+      - INSTANCE=${INSTANCE}
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
     resources:
       cpu: 1
       memory: 1G
@@ -33,6 +33,8 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - INSTANCE=${INSTANCE}
       - NODE_ENV=production
+      - DATABASE_URL=${DATABASE_URL}
+      - CORS_ORIGINS=${CORS_ORIGINS}
     resources:
       cpu: 1
       memory: 1G
@@ -76,6 +78,24 @@ env_variables:
     description: Instance name for subdomain
     required: true
     type: string
+
+  - name: NEXT_PUBLIC_API_URL
+    description: Frontend API URL
+    required: false
+    type: string
+    default: https://api.${INSTANCE}.uruenterprises.com/api
+
+  - name: DATABASE_URL
+    description: Database connection URL
+    required: false
+    type: string
+    default: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/uru_chatbot
+
+  - name: CORS_ORIGINS
+    description: CORS allowed origins (JSON array)
+    required: false
+    type: string
+    default: ["https://${INSTANCE}.uruenterprises.com","https://api.${INSTANCE}.uruenterprises.com"]
 
 customDomains:
   - hostname: ${INSTANCE}.uruenterprises.com

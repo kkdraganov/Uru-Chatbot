@@ -1,13 +1,21 @@
 # Environment Variables
 
-## Essential Variables (Only 4!)
+## Required Variables
 
-| Variable | Local Dev | Production |
-|----------|-----------|------------|
-| **INSTANCE** | `dev` | Your instance name |
-| **SECRET_KEY** | `development_secret_key` | Auto-generated |
-| **POSTGRES_USER** | `postgres` | Auto-generated |
-| **POSTGRES_PASSWORD** | `postgres` | Auto-generated |
+| Variable | Local Dev | Production | Description |
+|----------|-----------|------------|-------------|
+| **INSTANCE** | `dev` | Your instance name | Determines domain names |
+
+## Optional Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| **SECRET_KEY** | `development_secret_key` | Auto-generated | JWT token secret |
+| **POSTGRES_USER** | `postgres` | Auto-generated | Database username |
+| **POSTGRES_PASSWORD** | `postgres` | Auto-generated | Database password |
+| **NEXT_PUBLIC_API_URL** | Auto-constructed from INSTANCE | Frontend API endpoint |
+| **DATABASE_URL** | Auto-constructed from DB credentials | Database connection string |
+| **CORS_ORIGINS** | Auto-configured based on INSTANCE | CORS allowed origins |
 
 ## Setup
 

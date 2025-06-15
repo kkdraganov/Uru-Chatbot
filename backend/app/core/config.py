@@ -16,6 +16,8 @@ class Settings(BaseSettings):
 
     # Security settings
     SECRET_KEY: str = os.getenv("SECRET_KEY", "development_secret_key")
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # Instance name for domain configuration
     INSTANCE: str = os.getenv("INSTANCE", "dev")
