@@ -23,6 +23,11 @@ Elestio uses a two-file approach:
    - Uses environment variables injected by Elestio
    - Binds ports to `172.17.0.1` for Elestio's reverse proxy
 
+3. **Custom Domain Configuration** - The `customDomains` section specifies:
+   - Hostname mapping for each service
+   - SSL/HTTPS configuration
+   - Port routing for subdomain-based access
+
 ## Key Features
 
 ### Build-Time Variables
@@ -31,8 +36,15 @@ Elestio uses a two-file approach:
 - Uses `[INSTANCE]` placeholder for dynamic domain resolution
 
 ### Domain Configuration
+The deployment uses both standard port-based routing and custom domain mapping:
+
+**Standard Ports (fallback):**
+- Port 443 → Frontend (port 3000)
+- Port 8443 → Backend (port 8000)
+
+**Custom Domains (primary):**
 - **Frontend**: `https://[INSTANCE].uruenterprises.com` → `https://dynamosoftware.chat-dev.uruenterprises.com`
-- **API**: `https://api.[INSTANCE].uruenterprises.com` → `https://api.dynamosoftware.chat-dev.uruenterprises.com` (via port 8443)
+- **API**: `https://api.[INSTANCE].uruenterprises.com` → `https://api.dynamosoftware.chat-dev.uruenterprises.com`
 - **API Docs**: Available at `/docs` endpoint
 
 ### Security

@@ -55,6 +55,16 @@ lifeCycleConfig:
   postRestoreCommand: ""
   postDeployCommand: ""
 
+customDomains:
+  - hostname: "[INSTANCE].uruenterprises.com"
+    service: frontend
+    port: 3000
+    https: true
+  - hostname: "api.[INSTANCE].uruenterprises.com"
+    service: backend
+    port: 8000
+    https: true
+
 webUI:
   - url: "https://[INSTANCE].uruenterprises.com"
     label: "Uru Chatbot Frontend"
