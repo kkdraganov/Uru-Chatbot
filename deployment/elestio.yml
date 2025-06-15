@@ -9,7 +9,9 @@ services:
     port: 3000
     dockerfile: ./frontend/Dockerfile
     env:
-      - NEXT_PUBLIC_API_URL=https://api.dynamosoftware.${INSTANCE}.com
+      - NEXT_PUBLIC_API_URL=https://api.dynamosoftware.${INSTANCE}.com/api
+      - INSTANCE=${INSTANCE}
+      - NODE_ENV=production
     resources:
       cpu: 1
       memory: 1G
@@ -22,11 +24,10 @@ services:
     port: 8000
     dockerfile: ./backend/Dockerfile
     env:
-      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       - SECRET_KEY=${JWT_SECRET}
-      - ALGORITHM=HS256
-      - ACCESS_TOKEN_EXPIRE_MINUTES=30
-      - CORS_ORIGINS=["https://dynamosoftware.${INSTANCE}.com","https://api.dynamosoftware.${INSTANCE}.com"]
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - INSTANCE=${INSTANCE}
     resources:
       cpu: 1
       memory: 1G
@@ -34,11 +35,11 @@ services:
   - name: db
     type: database
     tech: postgresql
-    version: 14
+    version: 15
     env:
       - POSTGRES_USER=${DB_USER}
       - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_DB=uru_chatbot
     resources:
       cpu: 0.5
       memory: 1G
@@ -66,12 +67,6 @@ env_variables:
     type: password
     length: 16
 
-  - name: DB_NAME
-    description: Database name
-    required: true
-    default: uru_chatbot
-    type: string
-
   - name: INSTANCE
     description: Instance name for subdomain
     required: true
@@ -79,8 +74,8 @@ env_variables:
 
 customDomains:
   - hostname: dynamosoftware.${INSTANCE}.com
-    service: nginx
-    port: 8080
+    service: frontend
+    port: 3000
     https: true
 
   - hostname: api.dynamosoftware.${INSTANCE}.com

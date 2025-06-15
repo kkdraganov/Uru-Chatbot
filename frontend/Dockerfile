@@ -2,16 +2,12 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package files
 COPY package*.json ./
-
-# Install dependencies
 RUN npm ci
 
-# Copy the rest of the application
+# Copy source code and build
 COPY . .
-
-# Build the application
 RUN npm run build
 
 # Production image
@@ -19,18 +15,22 @@ FROM node:18-alpine AS runner
 
 WORKDIR /app
 
-# Set environment variables
-ENV NODE_ENV=production
+# Copy package files and install production dependencies only
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
 
-# Copy necessary files from builder
-COPY --from=builder /app/next.config.js ./
-COPY --from=builder /app/public ./public
+# Copy built application from builder
 COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package.json ./package.json
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.js ./
 
-# Expose the port
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S nextjs -u 1001
+USER nextjs
+
+# Expose port
 EXPOSE 3000
 
-# Run the application
+# Start the application
 CMD ["npm", "start"]
