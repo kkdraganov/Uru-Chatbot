@@ -30,8 +30,8 @@ async def root():
     return JSONResponse(
         content={
             "message": "Welcome to Uru ChatGPT Interface API",
-            "docs_url": f"{settings.API_V1_STR}/docs",
-            "health_check": f"{settings.API_V1_STR}/health"
+            "docs_url": "/docs",
+            "health_check": "/health"
         }
     )
 

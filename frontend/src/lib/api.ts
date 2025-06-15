@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 
 // Create axios instance with base URL
 const apiClient = axios.create({
@@ -55,7 +55,7 @@ apiClient.interceptors.response.use(
     }
     
     // Handle registration errors specifically
-    if (error.response.status === 400 && error.config.url?.includes('/api/auth/register')) {
+    if (error.response.status === 400 && error.config.url?.includes('/auth/register')) {
       const errorMessage = error.response?.data?.detail || 'Registration failed. Please check your input and try again.';
       return Promise.reject(new Error(errorMessage));
     }
@@ -72,18 +72,18 @@ export const api = {
     const formData = new URLSearchParams();
     formData.append('username', email);
     formData.append('password', password);
-    
-    const response = await apiClient.post('/api/auth/login', formData.toString(), {
+
+    const response = await apiClient.post('/auth/login', formData.toString(), {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
     });
     return response.data;
   },
-  
+
   register: async (email: string, password: string) => {
     try {
-      const response = await apiClient.post('/api/auth/register', { email, password }, {
+      const response = await apiClient.post('/auth/register', { email, password }, {
         withCredentials: false
       });
       return response.data;
@@ -98,25 +98,25 @@ export const api = {
     const response = await apiClient.get('/conversations');
     return response.data;
   },
-  
+
   getConversation: async (id: string) => {
     const response = await apiClient.get(`/conversations/${id}`);
     return response.data;
   },
-  
+
   createConversation: async (model: string) => {
-    const response = await apiClient.post('/conversations', { 
+    const response = await apiClient.post('/conversations', {
       title: 'New conversation',
-      model 
+      model
     });
     return response.data;
   },
-  
+
   updateConversation: async (id: string, data: { title?: string, model?: string }) => {
     const response = await apiClient.patch(`/conversations/${id}`, data);
     return response.data;
   },
-  
+
   deleteConversation: async (id: string) => {
     const response = await apiClient.delete(`/conversations/${id}`);
     return response.data;
@@ -132,7 +132,7 @@ export const api = {
     });
     return response.data;
   },
-  
+
   validateApiKey: async (apiKey: string) => {
     const response = await apiClient.post('/chat/validate-key', { apiKey });
     return response.data;
