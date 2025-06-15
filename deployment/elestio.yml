@@ -11,11 +11,11 @@ services:
     build_args:
       - NODE_ENV=production
       - INSTANCE=${INSTANCE}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
     env:
       - NODE_ENV=production
       - INSTANCE=${INSTANCE}
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
     resources:
       cpu: 1
       memory: 1G
@@ -78,12 +78,6 @@ env_variables:
     description: Instance name for subdomain
     required: true
     type: string
-
-  - name: NEXT_PUBLIC_API_URL
-    description: Frontend API URL
-    required: false
-    type: string
-    default: https://api.${INSTANCE}.uruenterprises.com/api
 
   - name: DATABASE_URL
     description: Database connection URL
