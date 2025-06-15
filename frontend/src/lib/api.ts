@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 // Create axios instance with base URL
 const apiClient = axios.create({
@@ -8,43 +8,72 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Add timeout to prevent hanging requests
+  timeout: 10000,
+  // Add withCredentials for CORS
+  withCredentials: true,
 });
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    // Only access localStorage in browser environment
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    console.error('API Request Error:', error);
+    return Promise.reject(error);
+  }
 );
 
 // Response interceptor for error handling
 apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Handle 401 Unauthorized errors
-    if (error.response && error.response.status === 401) {
-      // Clear token and redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('userId');
-      window.location.href = '/login';
+    console.error('API Response Error:', error);
+    
+    // Handle network errors
+    if (!error.response) {
+      console.error('Network Error - Unable to reach the server');
+      return Promise.reject(new Error('Unable to connect to the server. Please check your internet connection.'));
     }
-    return Promise.reject(error);
+    
+    // Handle 401 Unauthorized errors
+    if (error.response.status === 401) {
+      // Only access localStorage in browser environment
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+        window.location.href = '/login';
+      }
+    }
+    
+    // Handle registration errors specifically
+    if (error.response.status === 400 && error.config.url?.includes('/api/auth/register')) {
+      const errorMessage = error.response?.data?.detail || 'Registration failed. Please check your input and try again.';
+      return Promise.reject(new Error(errorMessage));
+    }
+    
+    // Handle other errors
+    const errorMessage = error.response?.data?.detail || 'An unexpected error occurred';
+    return Promise.reject(new Error(errorMessage));
   }
 );
 
 export const api = {
   // Auth endpoints
   login: async (email: string, password: string) => {
-    const formData = new FormData();
+    const formData = new URLSearchParams();
     formData.append('username', email);
     formData.append('password', password);
     
-    const response = await apiClient.post('/auth/login', formData, {
+    const response = await apiClient.post('/api/auth/login', formData.toString(), {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
@@ -53,8 +82,15 @@ export const api = {
   },
   
   register: async (email: string, password: string) => {
-    const response = await apiClient.post('/auth/register', { email, password });
-    return response.data;
+    try {
+      const response = await apiClient.post('/api/auth/register', { email, password }, {
+        withCredentials: false
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Registration error:', error);
+      throw error;
+    }
   },
   
   // Conversation endpoints

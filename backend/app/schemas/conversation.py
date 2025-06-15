@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional, List, Dict
 from datetime import datetime
 
@@ -28,8 +28,7 @@ class ConversationInDBBase(ConversationBase):
     updated_at: datetime
     token_count: int
     
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class Conversation(ConversationInDBBase):

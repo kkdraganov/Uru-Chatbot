@@ -29,16 +29,21 @@ export const useSSE = ({
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectAttempts = useRef<number>(0);
   const maxReconnectAttempts = 5;
+  const isClient = typeof window !== 'undefined';
   
   const disconnect = useCallback(() => {
+    if (!isClient) return;
+    
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
       eventSourceRef.current = null;
       setIsConnected(false);
     }
-  }, []);
+  }, [isClient]);
   
   const connect = useCallback(() => {
+    if (!isClient || !url) return;
+    
     // Clean up existing connection
     disconnect();
     
@@ -112,14 +117,16 @@ export const useSSE = ({
       console.error('Failed to establish SSE connection:', err);
       setError(err as Event);
     }
-  }, [url, onMessage, onError, onComplete, disconnect, withCredentials]);
+  }, [url, onMessage, onError, onComplete, disconnect, withCredentials, isClient]);
   
   // Clean up on unmount
   useEffect(() => {
+    if (!isClient) return;
+    
     return () => {
       disconnect();
     };
-  }, [disconnect]);
+  }, [disconnect, isClient]);
   
   return {
     isConnected,

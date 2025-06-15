@@ -56,7 +56,7 @@ class UserRepository:
         return user
     
     async def authenticate(self, email: str, password: str) -> Optional[User]:
-        """Authenticate user by email and password."""
+        """Authenticate a user."""
         user = await self.get_by_email(email)
         if not user:
             return None

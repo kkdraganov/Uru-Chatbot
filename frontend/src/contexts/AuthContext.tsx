@@ -18,17 +18,23 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true); // Start with loading true
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
   
-  // Check authentication status on client-side only
+  // Initialize client-side state
   useEffect(() => {
-    // This code only runs in the browser, after the component is mounted
-    setIsAuthenticated(!!localStorage.getItem('token'));
+    setIsClient(true);
+    // Check authentication status
+    const token = localStorage.getItem('token');
+    setIsAuthenticated(!!token);
+    setIsLoading(false);
   }, []);
 
   // Login function
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
+    if (!isClient) return false;
+    
     setIsLoading(true);
     setError(null);
     
@@ -37,7 +43,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       
       // Store token and user ID
       localStorage.setItem('token', data.access_token);
-      localStorage.setItem('userId', email); // Using email as user ID for simplicity
+      localStorage.setItem('userId', email);
       
       setIsAuthenticated(true);
       setIsLoading(false);
@@ -47,44 +53,46 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoading(false);
       return false;
     }
-  }, []);
+  }, [isClient]);
 
   // Register function
   const register = useCallback(async (email: string, password: string): Promise<boolean> => {
+    if (!isClient) return false;
+    
     setIsLoading(true);
     setError(null);
     
     try {
       await api.register(email, password);
-      
-      // Auto-login after registration
       return await login(email, password);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Registration failed');
       setIsLoading(false);
       return false;
     }
-  }, [login]);
+  }, [login, isClient]);
 
   // Logout function
   const logout = useCallback(() => {
+    if (!isClient) return;
+    
     localStorage.removeItem('token');
     localStorage.removeItem('userId');
     clearApiKey();
     setIsAuthenticated(false);
-  }, []);
+  }, [isClient]);
 
   // Set API key function
   const setApiKey = useCallback(async (apiKey: string): Promise<boolean> => {
+    if (!isClient) return false;
+    
     setIsLoading(true);
     setError(null);
     
     try {
-      // Validate API key with backend
       const result = await api.validateApiKey(apiKey);
       
       if (result.valid) {
-        // Store API key securely
         storeApiKey(apiKey);
         setIsLoading(false);
         return true;
@@ -98,12 +106,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoading(false);
       return false;
     }
-  }, []);
+  }, [isClient]);
 
   // Check if API key exists
   const hasApiKey = useCallback((): boolean => {
+    if (!isClient) return false;
     return !!getApiKey();
-  }, []);
+  }, [isClient]);
 
   const value = {
     isAuthenticated,

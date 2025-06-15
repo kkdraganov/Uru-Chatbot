@@ -35,12 +35,19 @@ const ChatContext = createContext<ChatContextType | undefined>(undefined);
 export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
+  
+  // Initialize client-side state
+  useEffect(() => {
+    setIsClient(true);
+    loadConversations().finally(() => setIsLoading(false));
+  }, []);
   
   // Handle incoming SSE messages
   const handleSSEMessage = useCallback((data: string) => {
-    if (!currentConversation) return;
+    if (!currentConversation || !isClient) return;
     
     try {
       const parsedData = JSON.parse(data);
@@ -73,11 +80,11 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       console.error('Failed to parse SSE message:', err);
     }
-  }, [currentConversation]);
+  }, [currentConversation, isClient]);
   
   // SSE connection for streaming responses
   const { connect, disconnect } = useSSE({
-    url: `${process.env.NEXT_PUBLIC_API_URL}/chat/stream?conversationId=${currentConversation?.id || ''}`,
+    url: isClient ? `${process.env.NEXT_PUBLIC_API_URL}/chat/stream?conversationId=${currentConversation?.id || ''}` : '',
     onMessage: handleSSEMessage,
     onError: (event) => {
       setError('Connection error: Please try again');
@@ -90,16 +97,20 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   // Load conversations
   const loadConversations = useCallback(async () => {
+    if (!isClient) return;
+    
     try {
       const response = await api.getConversations();
       setConversations(response);
     } catch (err) {
       setError('Failed to load conversations');
     }
-  }, []);
+  }, [isClient]);
   
   // Create a new conversation
   const createConversation = useCallback(async (model: string) => {
+    if (!isClient) return;
+    
     setIsLoading(true);
     setError(null);
     
@@ -116,10 +127,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setError('Failed to create conversation');
       setIsLoading(false);
     }
-  }, []);
+  }, [isClient]);
   
   // Select an existing conversation
   const selectConversation = useCallback(async (id: string) => {
+    if (!isClient) return;
+    
     setIsLoading(true);
     setError(null);
     
@@ -127,18 +140,18 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const conversation = await api.getConversation(id);
       setCurrentConversation({
         ...conversation,
-        messages: [] // In a real app, you'd load messages from an API or local storage
+        messages: []
       });
       setIsLoading(false);
     } catch (err) {
       setError('Failed to load conversation');
       setIsLoading(false);
     }
-  }, []);
+  }, [isClient]);
   
   // Send a message in the current conversation
   const sendMessage = useCallback(async (content: string) => {
-    if (!currentConversation) return;
+    if (!currentConversation || !isClient) return;
     
     setIsLoading(true);
     setError(null);
@@ -176,10 +189,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setError('Failed to send message');
       setIsLoading(false);
     }
-  }, [currentConversation, connect]);
+  }, [currentConversation, connect, isClient]);
   
   // Update conversation title
   const updateConversationTitle = useCallback(async (id: string, title: string) => {
+    if (!isClient) return;
+    
     try {
       await api.updateConversation(id, { title });
       
@@ -198,10 +213,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       setError('Failed to update conversation title');
     }
-  }, [currentConversation]);
+  }, [currentConversation, isClient]);
   
   // Delete a conversation
   const deleteConversation = useCallback(async (id: string) => {
+    if (!isClient) return;
+    
     try {
       await api.deleteConversation(id);
       
@@ -215,11 +232,11 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       setError('Failed to delete conversation');
     }
-  }, [currentConversation]);
+  }, [currentConversation, isClient]);
   
   // Change the model for the current conversation
   const changeModel = useCallback(async (model: string) => {
-    if (!currentConversation) return;
+    if (!currentConversation || !isClient) return;
     
     try {
       await api.updateConversation(currentConversation.id, { model });
@@ -231,12 +248,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     } catch (err) {
       setError('Failed to change model');
     }
-  }, [currentConversation]);
-  
-  // Load conversations on initial mount
-  useEffect(() => {
-    loadConversations();
-  }, [loadConversations]);
+  }, [currentConversation, isClient]);
   
   // Clean up SSE connection on unmount
   useEffect(() => {

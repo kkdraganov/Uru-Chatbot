@@ -1,21 +1,24 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 
 const IndexPage: React.FC = () => {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  const [isRedirecting, setIsRedirecting] = useState(false);
   
   useEffect(() => {
-    // Redirect to chat if authenticated, otherwise to login
-    if (isAuthenticated) {
-      router.push('/chat');
-    } else {
-      router.push('/login');
+    if (!isLoading) {
+      setIsRedirecting(true);
+      if (isAuthenticated) {
+        router.push('/chat');
+      } else {
+        router.push('/login');
+      }
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, isLoading, router]);
   
-  // Show loading state while redirecting
+  // Show loading state while checking auth or redirecting
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="text-center">
@@ -25,6 +28,11 @@ const IndexPage: React.FC = () => {
           <div className="w-3 h-3 bg-primary-600 rounded-full"></div>
           <div className="w-3 h-3 bg-primary-600 rounded-full"></div>
         </div>
+        {(isLoading || isRedirecting) && (
+          <p className="mt-4 text-sm text-gray-600">
+            {isLoading ? 'Checking authentication...' : 'Redirecting...'}
+          </p>
+        )}
       </div>
     </div>
   );
