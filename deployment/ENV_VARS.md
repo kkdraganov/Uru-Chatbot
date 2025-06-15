@@ -16,7 +16,7 @@
 
 ## Security Notes
 
-- The JWT_SECRET should be a strong, randomly generated string
-- The DB_PASSWORD should be a strong, randomly generated password
+- The SECRET_KEY should be a strong, randomly generated string
+- The POSTGRES_PASSWORD should be a strong, randomly generated password
 - API keys for OpenAI are stored client-side only and never sent to the server
 - All communication must be over HTTPS in production
