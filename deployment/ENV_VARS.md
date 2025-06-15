@@ -10,20 +10,21 @@ The deployment uses Elestio's standard Docker Compose deployment with environmen
 |----------|---------------|-------------|
 | **INSTANCE** | `[INSTANCE]` | Instance identifier from Elestio hosting environment variables |
 | **SECRET_KEY** | `random_password` | Auto-generated JWT secret |
-| **POSTGRES_USER** | `postgres` | Database username |
-| **POSTGRES_PASSWORD** | `random_password` | Auto-generated database password |
-| **POSTGRES_DB** | `uru_chatbot` | Database name |
-| **DATABASE_URL** | `postgresql+asyncpg://[POSTGRES_USER]:[POSTGRES_PASSWORD]@db:5432/[POSTGRES_DB]` | Full database connection string |
+| **DB_USER** | `postgres` | Database username |
+| **DB_PASSWORD** | `random_password` | Auto-generated database password |
+| **DB_NAME** | `uru_chatbot` | Database name |
+| **DATABASE_URL** | `postgresql+asyncpg://[DB_USER]:[DB_PASSWORD]@db:5432/[DB_NAME]` | Full database connection string |
 | **NEXT_PUBLIC_API_URL** | `https://api.[INSTANCE].uruenterprises.com/api` | Frontend API endpoint (build-time) |
 | **CORS_ORIGINS** | `["https://[INSTANCE].uruenterprises.com","https://api.[INSTANCE].uruenterprises.com"]` | CORS allowed origins |
-| **NODE_ENV** | `production` | Node.js environment |
+| **ENVIRONMENT** | `production` | Application environment |
 
 ## Elestio Special Variables
 
-- `[CI_CD_DOMAIN]` - Replaced with the actual domain by Elestio
-- `[POSTGRES_USER]` - Replaced with database username
-- `[POSTGRES_PASSWORD]` - Replaced with generated password
-- `[POSTGRES_DB]` - Replaced with database name
+- `[INSTANCE]` - Replaced with the actual instance name
+- `[ENVIRONMENT]` - Replaced with the environment type (`production` or `development`) 
+- `[DB_USER]` - Replaced with database username
+- `[DB_PASSWORD]` - Replaced with generated password
+- `[DB_NAME]` - Replaced with database name
 - `random_password` - Generates secure random passwords
 
 ## Domain Structure
@@ -35,10 +36,9 @@ The deployment uses Elestio's standard Docker Compose deployment with environmen
 ## Build-Time Variables
 
 The `NEXT_PUBLIC_API_URL` is required at build time for Next.js. Elestio handles this by:
-1. Setting `INSTANCE` from `[CI_CD_DOMAIN]` placeholder
-2. Constructing `NEXT_PUBLIC_API_URL` using the `[INSTANCE]` placeholder
-3. Passing it as a build arg to the Docker build process
-4. The application falls back to localhost for development environments
+1. Constructing `NEXT_PUBLIC_API_URL` using the `[INSTANCE]` placeholder
+2. Passing it as a build arg to the Docker build process
+3. The application falls back to localhost for development environments
 
 ## Security Notes
 

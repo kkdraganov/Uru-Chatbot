@@ -33,8 +33,6 @@ class Settings(BaseSettings):
         logger.info(f"[CONFIG] SECRET_KEY loaded: {'***REDACTED***' if self.SECRET_KEY != 'development_secret_key' else 'development_secret_key'}")
         logger.info(f"[CONFIG] INSTANCE loaded: {self.INSTANCE}")
         logger.info(f"[CONFIG] Production mode: {self.is_production}")
-        logger.info(f"[CONFIG] POSTGRES_USER: {self.POSTGRES_USER}")
-        logger.info(f"[CONFIG] POSTGRES_DB: {self.POSTGRES_DB}")
         logger.info(f"[CONFIG] DATABASE_URL: {self.DATABASE_URL}")
         logger.info(f"[CONFIG] CORS_ORIGINS: {self.CORS_ORIGINS}")
 
@@ -80,39 +78,36 @@ class Settings(BaseSettings):
             return dev_cors
 
     # Database settings
-    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
-    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "postgres")
-    POSTGRES_DB: str = "uru_chatbot"
-    POSTGRES_SERVER: str = "db"
-    POSTGRES_PORT: int = 5432
-    
     @property
     def DATABASE_URL(self) -> str:
-        """Get async database URL."""
-        # Use environment variable if provided and not empty, otherwise construct from components
+        """Get async database URL from environment."""
         env_url = os.getenv("DATABASE_URL")
         if env_url and env_url.strip():  # Check for non-empty string
             # DEBUG: Log database URL from environment (config.py:DATABASE_URL)
             logger.info(f"[CONFIG] DATABASE_URL from environment: {env_url}")
             return env_url
 
-        # Construct from individual components when env var is empty or missing
-        constructed_url = f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        # DEBUG: Log constructed database URL (config.py:DATABASE_URL)
-        logger.info(f"[CONFIG] DATABASE_URL constructed: {constructed_url}")
-        return constructed_url
+        # Fallback for development
+        fallback_url = "postgresql+asyncpg://postgres:postgres@db:5432/uru_chatbot"
+        # DEBUG: Log fallback database URL (config.py:DATABASE_URL)
+        logger.info(f"[CONFIG] DATABASE_URL using fallback: {fallback_url}")
+        return fallback_url
 
     @property
     def SYNC_DATABASE_URL(self) -> str:
-        """Get sync database URL for Alembic."""
-        return f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}@{self.POSTGRES_SERVER}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        """Get sync database URL for Alembic by converting async URL."""
+        async_url = self.DATABASE_URL
+        # Convert async URL to sync URL for Alembic
+        sync_url = async_url.replace("postgresql+asyncpg://", "postgresql://")
+        return sync_url
 
     # OpenAI settings (constants - users provide their own keys)
     OPENAI_MODELS: List[str] = [
         "gpt-4o",
         "gpt-4o-mini",
-        "o1-preview",
-        "o1-mini"
+        "o1",
+        "o3",
+        "o3-mini"
     ]
     
     class Config:

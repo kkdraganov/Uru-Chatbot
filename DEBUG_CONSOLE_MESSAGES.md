@@ -8,10 +8,8 @@ This file tracks all debug console messages added for environment variable loggi
 - **Line ~32**: `logger.info(f"[CONFIG] SECRET_KEY loaded: {'***REDACTED***' if self.SECRET_KEY != 'development_secret_key' else 'development_secret_key'}")`
 - **Line ~33**: `logger.info(f"[CONFIG] INSTANCE loaded: {self.INSTANCE}")`
 - **Line ~34**: `logger.info(f"[CONFIG] Production mode: {self.is_production}")`
-- **Line ~35**: `logger.info(f"[CONFIG] POSTGRES_USER: {self.POSTGRES_USER}")`
-- **Line ~36**: `logger.info(f"[CONFIG] POSTGRES_DB: {self.POSTGRES_DB}")`
-- **Line ~37**: `logger.info(f"[CONFIG] DATABASE_URL: {self.DATABASE_URL}")`
-- **Line ~38**: `logger.info(f"[CONFIG] CORS_ORIGINS: {self.CORS_ORIGINS}")`
+- **Line ~35**: `logger.info(f"[CONFIG] DATABASE_URL: {self.DATABASE_URL}")`
+- **Line ~36**: `logger.info(f"[CONFIG] CORS_ORIGINS: {self.CORS_ORIGINS}")`
 - **Line ~48**: `logger.info(f"[CONFIG] NODE_ENV: {node_env}, INSTANCE: {self.INSTANCE}, is_production: {is_prod}")`
 - **Line ~60**: `logger.info(f"[CONFIG] CORS_ORIGINS from env (parsed JSON): {parsed_cors}")`
 - **Line ~63**: `logger.info(f"[CONFIG] CORS_ORIGINS from env (single string): {cors_env}")`
@@ -57,21 +55,19 @@ This file tracks all debug console messages added for environment variable loggi
 ### Backend
 - **SECRET_KEY**: Logged as redacted in production, full value in development
 - **INSTANCE**: Instance identifier for domain construction
-- **NODE_ENV**: Environment mode (development/production)
-- **POSTGRES_USER**: Database username
-- **POSTGRES_DB**: Database name
+- **ENVIRONMENT**: Environment mode (development/production)
 - **DATABASE_URL**: Full database connection string
 - **CORS_ORIGINS**: CORS allowed origins (JSON array or single string)
 
 ### Frontend
 - **NEXT_PUBLIC_API_URL**: API endpoint URL for frontend
 - **INSTANCE**: Instance identifier for domain construction
-- **NODE_ENV**: Node.js environment mode
+- **ENVIRONMENT**: Environment mode
 
 ### Database (PostgreSQL)
-- **POSTGRES_USER**: Database username
-- **POSTGRES_PASSWORD**: Database password (not logged for security)
-- **POSTGRES_DB**: Database name
+- **DB_USER**: Database username (via POSTGRES_USER in container)
+- **DB_PASSWORD**: Database password (via POSTGRES_PASSWORD in container, not logged for security)
+- **DB_NAME**: Database name (via POSTGRES_DB in container)
 
 ## Removal Instructions
 

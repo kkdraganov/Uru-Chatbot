@@ -11,7 +11,7 @@
 - INSTANCE now comes through properly from Elestio's environment variables
 
 ### 2. Hardcoded Environment Variables Not Showing in Debug
-**Problem**: Variables like `POSTGRES_USER`, `POSTGRES_PASSWORD`, `ENVIRONMENT`, and `SECRET_KEY` that are hardcoded in Docker Compose weren't appearing in debug logs.
+**Problem**: Variables like `DB_USER`, `DB_PASSWORD`, `ENVIRONMENT`, and `SECRET_KEY` that are hardcoded in Docker Compose weren't appearing in debug logs.
 
 **Fix**:
 - Added default values in Docker Compose using `${VAR:-default}` syntax
@@ -71,8 +71,7 @@ args:
 # Backend environment with defaults
 environment:
   - SECRET_KEY=${SECRET_KEY:-development_secret_key}
-  - POSTGRES_USER=${POSTGRES_USER:-postgres}
-  - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+  - DATABASE_URL=${DATABASE_URL:-postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-uru_chatbot}}
   - INSTANCE=${INSTANCE:-dev}
 ```
 
@@ -96,7 +95,7 @@ environments:
   - key: "SECRET_KEY"
     value: "random_password"
   - key: "DATABASE_URL"
-    value: "postgresql+asyncpg://[POSTGRES_USER]:[POSTGRES_PASSWORD]@db:5432/[POSTGRES_DB]"
+    value: "postgresql+asyncpg://[DB_USER]:[DB_PASSWORD]@db:5432/[DB_NAME]"
   - key: "NEXT_PUBLIC_API_URL"
     value: "https://api.[INSTANCE].uruenterprises.com/api"
   - key: "CORS_ORIGINS"

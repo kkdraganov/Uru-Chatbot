@@ -27,9 +27,8 @@ services:
       - ./backend:/app
     environment:
       - SECRET_KEY=development_secret_key
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
       - INSTANCE=dev
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/uru_chatbot
     depends_on:
       - db
     networks:
