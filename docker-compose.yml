@@ -6,13 +6,13 @@ services:
       args:
         - ENVIRONMENT=${ENVIRONMENT:-production}
         - INSTANCE=${INSTANCE:-dev}
-        - NEXT_PUBLIC_API_URL="https://api.${INSTANCE}.uruenterprises.com/api"
+        - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
     ports:
       - "172.17.0.1:3000:3000"
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-production}
       - INSTANCE=${INSTANCE:-dev}
-      - NEXT_PUBLIC_API_URL="https://api.${INSTANCE}.uruenterprises.com/api"
+      - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
     depends_on:
       - backend
     restart: always
