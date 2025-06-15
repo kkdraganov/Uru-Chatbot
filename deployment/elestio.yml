@@ -16,7 +16,7 @@ environments:
   - key: "POSTGRES_USER"
     value: "postgres"
   - key: "POSTGRES_PASSWORD"
-    value: "random_password"
+    value: "postgres"
   - key: "POSTGRES_DB"
     value: "uru_chatbot"
   - key: "DATABASE_URL"
