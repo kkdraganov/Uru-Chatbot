@@ -2,6 +2,16 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# Accept build arguments
+ARG NEXT_PUBLIC_API_URL
+ARG INSTANCE
+ARG NODE_ENV=production
+
+# Set environment variables for build
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV INSTANCE=$INSTANCE
+ENV NODE_ENV=$NODE_ENV
+
 # Copy package files
 COPY package*.json ./
 RUN npm ci

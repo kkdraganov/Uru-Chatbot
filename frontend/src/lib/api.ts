@@ -1,6 +1,34 @@
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+// Function to determine API URL
+function getApiUrl(): string {
+  // First, try the explicit environment variable
+  if (process.env.NEXT_PUBLIC_API_URL) {
+    console.log('Using NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+    return process.env.NEXT_PUBLIC_API_URL;
+  }
+
+  // If we're in the browser, try to detect from current location
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    console.log('Current hostname:', hostname);
+
+    // Check if we're on a production domain
+    if (hostname.includes('.uruenterprises.com')) {
+      // Extract the instance part (e.g., "dynamosoftware.chat-dev" from "dynamosoftware.chat-dev.uruenterprises.com")
+      const instancePart = hostname.replace('.uruenterprises.com', '');
+      const apiUrl = `https://api.${instancePart}.uruenterprises.com/api`;
+      console.log('Auto-detected API URL:', apiUrl);
+      return apiUrl;
+    }
+  }
+
+  // Fallback to localhost for development
+  console.log('Using localhost fallback');
+  return 'http://localhost:8000/api';
+}
+
+const API_URL = getApiUrl();
 
 // Create axios instance with base URL
 const apiClient = axios.create({
@@ -13,6 +41,9 @@ const apiClient = axios.create({
   // Add withCredentials for CORS
   withCredentials: true,
 });
+
+// Log the API URL being used for debugging
+console.log('API Client initialized with baseURL:', API_URL);
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(
@@ -67,6 +98,9 @@ apiClient.interceptors.response.use(
 );
 
 export const api = {
+  // Debug method to check API configuration
+  getApiUrl: () => API_URL,
+
   // Auth endpoints
   login: async (email: string, password: string) => {
     const formData = new URLSearchParams();
