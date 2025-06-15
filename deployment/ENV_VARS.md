@@ -14,28 +14,30 @@ The deployment uses Elestio's standard Docker Compose deployment with environmen
 | **POSTGRES_PASSWORD** | `random_password` | Auto-generated database password |
 | **POSTGRES_DB** | `uru_chatbot` | Database name |
 | **DATABASE_URL** | Auto-constructed | Full database connection string |
-| **NEXT_PUBLIC_API_URL** | `https://api.[CI_CD_DOMAIN]/api` | Frontend API endpoint (build-time) |
+| **NEXT_PUBLIC_API_URL** | `https://api.[INSTANCE].uruenterprises.com/api` | Frontend API endpoint (build-time) |
 | **CORS_ORIGINS** | Auto-configured JSON array | CORS allowed origins |
 | **NODE_ENV** | `production` | Node.js environment |
 
 ## Elestio Special Variables
 
-- `[CI_CD_DOMAIN]` - Replaced with actual domain at deployment time
+- `[INSTANCE]` - Replaced with the instance value at deployment time
+- `[POSTGRES_USER]` - Replaced with database username
 - `[POSTGRES_PASSWORD]` - Replaced with generated password
+- `[POSTGRES_DB]` - Replaced with database name
 - `random_password` - Generates secure random passwords
 
 ## Domain Structure
 
-- **Frontend**: `https://dynamosoftware.chat-dev.uruenterprises.com`
-- **API**: `https://api.dynamosoftware.chat-dev.uruenterprises.com`
-- **API Docs**: `https://api.dynamosoftware.chat-dev.uruenterprises.com/docs`
+- **Frontend**: `https://[INSTANCE].uruenterprises.com` → `https://dynamosoftware.chat-dev.uruenterprises.com`
+- **API**: `https://api.[INSTANCE].uruenterprises.com` → `https://api.dynamosoftware.chat-dev.uruenterprises.com`
+- **API Docs**: `https://api.[INSTANCE].uruenterprises.com/docs`
 
 ## Build-Time Variables
 
 The `NEXT_PUBLIC_API_URL` is required at build time for Next.js. Elestio handles this by:
 1. Injecting the variable into the `.env` file before build
 2. Passing it as a build arg to the Docker build process
-3. Using the `[CI_CD_DOMAIN]` placeholder for dynamic domain resolution
+3. Using the `[INSTANCE]` placeholder for dynamic domain resolution
 
 ## Security Notes
 

@@ -22,9 +22,9 @@ environments:
   - key: "DATABASE_URL"
     value: "postgresql+asyncpg://[POSTGRES_USER]:[POSTGRES_PASSWORD]@db:5432/[POSTGRES_DB]"
   - key: "NEXT_PUBLIC_API_URL"
-    value: "https://api.[CI_CD_DOMAIN]/api"
+    value: "https://api.[INSTANCE].uruenterprises.com/api"
   - key: "CORS_ORIGINS"
-    value: "[\"https://[CI_CD_DOMAIN]\",\"https://api.[CI_CD_DOMAIN]\"]"
+    value: "[\"https://[INSTANCE].uruenterprises.com\",\"https://api.[INSTANCE].uruenterprises.com\"]"
   - key: "NODE_ENV"
     value: "production"
 
@@ -56,7 +56,7 @@ lifeCycleConfig:
   postDeployCommand: ""
 
 webUI:
-  - url: "https://[CI_CD_DOMAIN]"
+  - url: "https://[INSTANCE].uruenterprises.com"
     label: "Uru Chatbot Frontend"
-  - url: "https://api.[CI_CD_DOMAIN]/docs"
+  - url: "https://api.[INSTANCE].uruenterprises.com/docs"
     label: "API Documentation"

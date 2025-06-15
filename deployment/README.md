@@ -28,11 +28,11 @@ Elestio uses a two-file approach:
 ### Build-Time Variables
 - `NEXT_PUBLIC_API_URL` is properly handled at build time
 - Elestio injects variables before Docker build process
-- Uses `[CI_CD_DOMAIN]` placeholder for dynamic domain resolution
+- Uses `[INSTANCE]` placeholder for dynamic domain resolution
 
 ### Domain Configuration
-- **Frontend**: `https://dynamosoftware.chat-dev.uruenterprises.com`
-- **API**: `https://api.dynamosoftware.chat-dev.uruenterprises.com` (via port 8443)
+- **Frontend**: `https://[INSTANCE].uruenterprises.com` → `https://dynamosoftware.chat-dev.uruenterprises.com`
+- **API**: `https://api.[INSTANCE].uruenterprises.com` → `https://api.dynamosoftware.chat-dev.uruenterprises.com` (via port 8443)
 - **API Docs**: Available at `/docs` endpoint
 
 ### Security
@@ -72,5 +72,5 @@ Elestio uses a two-file approach:
 - Ensure services can communicate via Docker network
 
 ### Domain Issues
-- Confirm `[CI_CD_DOMAIN]` placeholder is used correctly
+- Confirm `[INSTANCE]` placeholder is used correctly
 - Verify port configuration in `elestio.yml` matches services
