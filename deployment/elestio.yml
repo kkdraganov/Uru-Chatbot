@@ -8,7 +8,7 @@ services:
     https: true
     port: 3000
     dockerfile: ./frontend/Dockerfile
-    build_args:
+    args:
       - NODE_ENV=production
       - INSTANCE=${INSTANCE}
       - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
