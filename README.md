@@ -15,8 +15,8 @@ Web application allowing clients to use their own OpenAI API keys through Uru's 
 
 ## Quick Setup
 ```bash
-git clone <repository-url>
-cd uru-chatbot
+git clone https://github.com/kkdraganov/Uru-Chatbot.git 
+cd Uru-Chatbot
 cp .env.example .env
 docker-compose up --build
 ```

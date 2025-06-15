@@ -12,11 +12,6 @@ ENV NODE_ENV=$NODE_ENV
 ENV INSTANCE=$INSTANCE
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
-# Debug: Print environment variables during build
-RUN echo "Build-time NODE_ENV: ${NODE_ENV:-not_set}"
-RUN echo "Build-time INSTANCE: ${INSTANCE:-not_set}"
-RUN echo "Build-time NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-not_set}"
-
 # Copy package files
 COPY package*.json ./
 RUN npm ci

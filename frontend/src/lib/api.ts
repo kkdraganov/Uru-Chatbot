@@ -2,29 +2,36 @@ import axios from 'axios';
 
 // Function to determine API URL
 function getApiUrl(): string {
+  // DEBUG: Log environment variable check (api.ts:getApiUrl)
+  console.log('[API] Checking NEXT_PUBLIC_API_URL from env:', process.env.NEXT_PUBLIC_API_URL);
+
   // First, try the explicit environment variable
   if (process.env.NEXT_PUBLIC_API_URL) {
-    console.log('Using NEXT_PUBLIC_API_URL:', process.env.NEXT_PUBLIC_API_URL);
+    console.log('[API] Using NEXT_PUBLIC_API_URL from environment:', process.env.NEXT_PUBLIC_API_URL);
     return process.env.NEXT_PUBLIC_API_URL;
   }
 
   // If we're in the browser, try to detect from current location
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
-    console.log('Current hostname:', hostname);
+    console.log('[API] Browser detected, current hostname:', hostname);
 
     // Check if we're on a production domain
     if (hostname.includes('.uruenterprises.com')) {
       // Extract the instance part (e.g., "dynamosoftware.chat-dev" from "dynamosoftware.chat-dev.uruenterprises.com")
       const instancePart = hostname.replace('.uruenterprises.com', '');
       const apiUrl = `https://api.${instancePart}.uruenterprises.com/api`;
-      console.log('Auto-detected API URL:', apiUrl);
+      console.log('[API] Auto-detected production API URL from hostname:', apiUrl);
       return apiUrl;
+    } else {
+      console.log('[API] Hostname does not contain .uruenterprises.com, using localhost fallback');
     }
+  } else {
+    console.log('[API] Server-side rendering detected, using localhost fallback');
   }
 
   // Fallback to localhost for development
-  console.log('Using localhost fallback');
+  console.log('[API] Using localhost fallback for development');
   return 'http://localhost:8000/api';
 }
 
@@ -42,8 +49,9 @@ const apiClient = axios.create({
   withCredentials: true,
 });
 
-// Log the API URL being used for debugging
-console.log('API Client initialized with baseURL:', API_URL);
+// DEBUG: Log API client initialization (api.ts:client_init)
+console.log('[API] API Client initialized with baseURL:', API_URL);
+console.log('[API] Client config - timeout: 10000ms, withCredentials: true');
 
 // Request interceptor to add auth token
 apiClient.interceptors.request.use(

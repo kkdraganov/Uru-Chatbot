@@ -1,12 +1,21 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.pool import AsyncAdaptedQueuePool
+import logging
 
 from app.core.config import settings
 
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# DEBUG: Log database connection setup (base.py:engine_creation)
+database_url = settings.DATABASE_URL
+logger.info(f"[DB] Creating async engine with DATABASE_URL: {database_url}")
+logger.info(f"[DB] Engine config - pool_size: 20, max_overflow: 10, pool_timeout: 30s, pool_recycle: 1800s")
+
 # Create async engine with connection pooling
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    database_url,
     echo=True,
     poolclass=AsyncAdaptedQueuePool,
     pool_size=20,
