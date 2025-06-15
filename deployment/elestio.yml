@@ -36,7 +36,7 @@ services:
   - name: db
     type: database
     tech: postgresql
-    version: 15
+    version: 14
     env:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
