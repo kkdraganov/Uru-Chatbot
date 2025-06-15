@@ -1,103 +1,62 @@
-app_name: uru-chatbot
-instance: ${INSTANCE}
-services:
-  - name: frontend
-    type: web
-    tech: nextjs
-    domain: ${INSTANCE}.uruenterprises.com
-    https: true
-    port: 3000
-    dockerfile: ./frontend/Dockerfile
-    args:
-      - NODE_ENV=production
-      - INSTANCE=${INSTANCE}
-      - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
-    env:
-      - NODE_ENV=production
-      - INSTANCE=${INSTANCE}
-      - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
-    resources:
-      cpu: 1
-      memory: 1G
+config:
+  runTime: "dockerCompose"
+  version: ""
+  framework: ""
+  buildCommand: "docker-compose build"
+  buildDir: "/"
+  runCommand: "docker-compose up -d"
+  icon: ""
+  screenshot: ""
 
-  - name: backend
-    type: api
-    tech: python
-    domain: api.${INSTANCE}.uruenterprises.com
-    https: true
-    port: 8000
-    dockerfile: ./backend/Dockerfile
-    env:
-      - SECRET_KEY=${SECRET_KEY}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - INSTANCE=${INSTANCE}
-      - NODE_ENV=production
-      - DATABASE_URL=${DATABASE_URL}
-      - CORS_ORIGINS=${CORS_ORIGINS}
-    resources:
-      cpu: 1
-      memory: 1G
+environments:
+  - key: "INSTANCE"
+    value: "dynamosoftware.chat-dev"
+  - key: "SECRET_KEY"
+    value: "random_password"
+  - key: "POSTGRES_USER"
+    value: "postgres"
+  - key: "POSTGRES_PASSWORD"
+    value: "random_password"
+  - key: "POSTGRES_DB"
+    value: "uru_chatbot"
+  - key: "DATABASE_URL"
+    value: "postgresql+asyncpg://[POSTGRES_USER]:[POSTGRES_PASSWORD]@db:5432/[POSTGRES_DB]"
+  - key: "NEXT_PUBLIC_API_URL"
+    value: "https://api.[CI_CD_DOMAIN]/api"
+  - key: "CORS_ORIGINS"
+    value: "[\"https://[CI_CD_DOMAIN]\",\"https://api.[CI_CD_DOMAIN]\"]"
+  - key: "NODE_ENV"
+    value: "production"
 
-  - name: db
-    type: database
-    tech: postgresql
-    version: 14
-    env:
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=uru_chatbot
-    resources:
-      cpu: 0.5
-      memory: 1G
-    volumes:
-      - data:/var/lib/postgresql/data
+ports:
+  - protocol: "HTTPS"
+    targetProtocol: "HTTP"
+    listeningPort: "443"
+    targetPort: "3000"
+    targetIP: "172.17.0.1"
+    public: true
+    path: "/"
+    isAuth: false
+  - protocol: "HTTPS"
+    targetProtocol: "HTTP"
+    listeningPort: "8443"
+    targetPort: "8000"
+    targetIP: "172.17.0.1"
+    public: true
+    path: "/"
+    isAuth: false
 
-env_variables:
-  - name: SECRET_KEY
-    description: Secret key for JWT token generation
-    required: true
-    generate: true
-    type: string
-    length: 32
+lifeCycleConfig:
+  preInstallCommand: ""
+  postInstallCommand: ""
+  preBackupCommand: ""
+  postBackupCommand: ""
+  preRestoreCommand: ""
+  postRestoreCommand: ""
+  postDeployCommand: ""
 
-  - name: POSTGRES_USER
-    description: Database username
-    required: true
-    default: postgres
-    type: string
-
-  - name: POSTGRES_PASSWORD
-    description: Database password
-    required: true
-    generate: true
-    type: password
-    length: 16
-
-  - name: INSTANCE
-    description: Instance name for subdomain
-    required: true
-    type: string
-
-  - name: DATABASE_URL
-    description: Database connection URL
-    required: false
-    type: string
-    default: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/uru_chatbot
-
-  - name: CORS_ORIGINS
-    description: CORS allowed origins (JSON array)
-    required: false
-    type: string
-    default: ["https://${INSTANCE}.uruenterprises.com","https://api.${INSTANCE}.uruenterprises.com"]
-
-customDomains:
-  - hostname: ${INSTANCE}.uruenterprises.com
-    service: frontend
-    port: 3000
-    https: true
-
-  - hostname: api.${INSTANCE}.uruenterprises.com
-    service: backend
-    port: 8000
-    https: true
+webUI:
+  - url: "https://[CI_CD_DOMAIN]"
+    label: "Uru Chatbot Frontend"
+  - url: "https://api.[CI_CD_DOMAIN]/docs"
+    label: "API Documentation"
