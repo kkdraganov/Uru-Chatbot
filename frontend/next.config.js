@@ -3,18 +3,21 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api',
+    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL ||
+      (process.env.INSTANCE && process.env.INSTANCE !== 'dev'
+        ? `https://api.${process.env.INSTANCE}.uruenterprises.com/api`
+        : 'http://localhost:8000/api'),
   },
   images: {
     domains: [
       'localhost',
       // Dynamic domains based on environment
       ...(process.env.INSTANCE ? [
-        `dynamosoftware.${process.env.INSTANCE}.com`,
-        `api.dynamosoftware.${process.env.INSTANCE}.com`
+        `${process.env.INSTANCE}.uruenterprises.com`,
+        `api.${process.env.INSTANCE}.uruenterprises.com`
       ] : [
-        'dynamosoftware.dev.com',
-        'api.dynamosoftware.dev.com'
+        'dynamosoftware.dev.uruenterprises.com',
+        'api.dynamosoftware.dev.uruenterprises.com'
       ])
     ],
   },

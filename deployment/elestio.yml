@@ -4,12 +4,12 @@ services:
   - name: frontend
     type: web
     tech: nextjs
-    domain: dynamosoftware.${INSTANCE}.com
+    domain: ${INSTANCE}.uruenterprises.com
     https: true
     port: 3000
     dockerfile: ./frontend/Dockerfile
     env:
-      - NEXT_PUBLIC_API_URL=https://api.dynamosoftware.${INSTANCE}.com/api
+      - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
       - INSTANCE=${INSTANCE}
       - NODE_ENV=production
     resources:
@@ -19,7 +19,7 @@ services:
   - name: backend
     type: api
     tech: python
-    domain: api.dynamosoftware.${INSTANCE}.com
+    domain: api.${INSTANCE}.uruenterprises.com
     https: true
     port: 8000
     dockerfile: ./backend/Dockerfile
@@ -74,12 +74,12 @@ env_variables:
     type: string
 
 customDomains:
-  - hostname: dynamosoftware.${INSTANCE}.com
+  - hostname: ${INSTANCE}.uruenterprises.com
     service: frontend
     port: 3000
     https: true
 
-  - hostname: api.dynamosoftware.${INSTANCE}.com
+  - hostname: api.${INSTANCE}.uruenterprises.com
     service: backend
     port: 8000
     https: true

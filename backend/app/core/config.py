@@ -40,8 +40,8 @@ class Settings(BaseSettings):
         # Auto-configure based on environment
         if self.is_production:
             return [
-                f"https://dynamosoftware.{self.INSTANCE}.com",
-                f"https://api.dynamosoftware.{self.INSTANCE}.com"
+                f"https://{self.INSTANCE}.uruenterprises.com",
+                f"https://api.{self.INSTANCE}.uruenterprises.com"
             ]
         else:
             return ["http://localhost:3000"]
@@ -49,9 +49,9 @@ class Settings(BaseSettings):
     # Database settings
     POSTGRES_USER: str = os.getenv("POSTGRES_USER", "postgres")
     POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD", "postgres")
-    POSTGRES_DB: str = "uru_chatbot"  # Never changes
-    POSTGRES_SERVER: str = "db"  # Always "db" in Docker
-    POSTGRES_PORT: int = 5432  # Never changes
+    POSTGRES_DB: str = "uru_chatbot"
+    POSTGRES_SERVER: str = "db"
+    POSTGRES_PORT: int = 5432
     
     @property
     def DATABASE_URL(self) -> str:
