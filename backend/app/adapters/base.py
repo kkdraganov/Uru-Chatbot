@@ -1,26 +1,36 @@
 from abc import ABC, abstractmethod
-from typing import AsyncIterator, Dict, Any, Optional
+from typing import AsyncIterator, Dict, Any, Optional, Tuple, List
 
 class ModelAdapter(ABC):
-    """Base class for AI model adapters."""
-    
+    """Enhanced base class for AI model adapters."""
+
     @abstractmethod
     async def generate_stream(
-        self, 
-        messages: list[Dict[str, str]], 
-        model: str, 
+        self,
+        messages: List[Dict[str, str]],
+        model: str,
         api_key: str,
         **kwargs
-    ) -> AsyncIterator[str]:
-        """Generate streaming response from the model."""
+    ) -> AsyncIterator[Tuple[str, Dict[str, Any]]]:
+        """Generate streaming response from the model with metadata."""
         pass
-    
+
     @abstractmethod
-    async def validate_api_key(self, api_key: str) -> bool:
-        """Validate if the provided API key is valid."""
+    async def validate_api_key(self, api_key: str) -> Dict[str, Any]:
+        """Validate API key and return detailed information."""
         pass
-    
+
     @abstractmethod
-    def get_available_models(self) -> list[str]:
+    def get_available_models(self) -> List[str]:
         """Return list of available models for this adapter."""
+        pass
+
+    @abstractmethod
+    def calculate_cost(self, model: str, total_tokens: int, completion_tokens: int) -> float:
+        """Calculate cost estimate for the API call."""
+        pass
+
+    @abstractmethod
+    def get_model_info(self, model: str) -> Dict[str, Any]:
+        """Get detailed information about a specific model."""
         pass
