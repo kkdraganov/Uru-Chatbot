@@ -123,9 +123,14 @@ export const api = {
     return response.data;
   },
 
-  register: async (email: string, password: string) => {
+  register: async (email: string, password: string, firstName?: string, lastName?: string) => {
     try {
-      const response = await apiClient.post('/auth/register', { email, password }, {
+      const response = await apiClient.post('/auth/register', {
+        email,
+        password,
+        first_name: firstName,
+        last_name: lastName
+      }, {
         withCredentials: false
       });
       return response.data;
@@ -133,6 +138,11 @@ export const api = {
       console.error('Registration error:', error);
       throw error;
     }
+  },
+
+  getCurrentUser: async () => {
+    const response = await apiClient.get('/auth/me');
+    return response.data;
   },
   
   // Conversation endpoints
@@ -146,11 +156,8 @@ export const api = {
     return response.data;
   },
 
-  createConversation: async (model: string) => {
-    const response = await apiClient.post('/conversations', {
-      title: 'New conversation',
-      model
-    });
+  createConversation: async (data: { title: string; model: string; system_prompt?: string }) => {
+    const response = await apiClient.post('/conversations', data);
     return response.data;
   },
 
@@ -176,7 +183,17 @@ export const api = {
   },
 
   validateApiKey: async (apiKey: string) => {
-    const response = await apiClient.post('/chat/validate-key', { apiKey });
+    const response = await apiClient.post('/chat/validate-key', { api_key: apiKey });
+    return response.data;
+  },
+
+  getAvailableModels: async () => {
+    const response = await apiClient.get('/chat/models');
+    return response.data;
+  },
+
+  getModelInfo: async (modelId: string) => {
+    const response = await apiClient.get(`/chat/models/${modelId}`);
     return response.data;
   },
   

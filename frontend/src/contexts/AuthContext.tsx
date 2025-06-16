@@ -2,49 +2,99 @@ import React, { createContext, useContext, useState, useCallback, ReactNode, use
 import { api } from '../lib/api';
 import { storeApiKey, getApiKey, clearApiKey } from '../lib/encryption';
 
+interface User {
+  id: number;
+  email: string;
+  first_name?: string;
+  last_name?: string;
+  role: string;
+  is_active: boolean;
+  is_verified: boolean;
+  full_name: string;
+  created_at: string;
+  updated_at: string;
+}
+
 interface AuthContextType {
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string, firstName?: string, lastName?: string) => Promise<boolean>;
   logout: () => void;
-  setApiKey: (apiKey: string) => Promise<boolean>;
+  setApiKey: (apiKey: string) => void;
+  getApiKey: () => string | null;
   hasApiKey: () => boolean;
-  clearApiKey: () => void;
+  validateApiKey: (apiKey: string) => Promise<{ valid: boolean; error?: string; models?: string[] }>;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true); // Start with loading true
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
-  
+
   // Initialize client-side state
   useEffect(() => {
     setIsClient(true);
-    // Check authentication status
-    const token = localStorage.getItem('token');
-    setIsAuthenticated(!!token);
-    setIsLoading(false);
+    initializeAuth();
   }, []);
+
+  const initializeAuth = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      if (token) {
+        // Validate token and get user info
+        await refreshUser();
+        setIsAuthenticated(true);
+      }
+    } catch (error) {
+      console.error('Auth initialization failed:', error);
+      // Clear invalid token
+      localStorage.removeItem('token');
+      setIsAuthenticated(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Refresh user data
+  const refreshUser = useCallback(async () => {
+    if (!isClient) return;
+
+    try {
+      const userData = await api.getCurrentUser();
+      setUser(userData);
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      throw error;
+    }
+  }, [isClient]);
 
   // Login function
   const login = useCallback(async (email: string, password: string): Promise<boolean> => {
     if (!isClient) return false;
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
       const data = await api.login(email, password);
-      
-      // Store token and user ID
+
+      // Store token
       localStorage.setItem('token', data.access_token);
-      localStorage.setItem('userId', email);
-      
+      if (data.refresh_token) {
+        localStorage.setItem('refresh_token', data.refresh_token);
+      }
+
+      // Get user data
+      await refreshUser();
+
       setIsAuthenticated(true);
       setIsLoading(false);
       return true;
@@ -53,17 +103,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setIsLoading(false);
       return false;
     }
-  }, [isClient]);
+  }, [isClient, refreshUser]);
 
   // Register function
-  const register = useCallback(async (email: string, password: string): Promise<boolean> => {
+  const register = useCallback(async (
+    email: string,
+    password: string,
+    firstName?: string,
+    lastName?: string
+  ): Promise<boolean> => {
     if (!isClient) return false;
-    
+
     setIsLoading(true);
     setError(null);
-    
+
     try {
-      await api.register(email, password);
+      await api.register(email, password, firstName, lastName);
       return await login(email, password);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Registration failed');
@@ -75,36 +130,40 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Logout function
   const logout = useCallback(() => {
     if (!isClient) return;
-    
+
     localStorage.removeItem('token');
-    localStorage.removeItem('userId');
+    localStorage.removeItem('refresh_token');
     clearApiKey();
+    setUser(null);
     setIsAuthenticated(false);
   }, [isClient]);
 
   // Set API key function
-  const setApiKey = useCallback(async (apiKey: string): Promise<boolean> => {
-    if (!isClient) return false;
-    
-    setIsLoading(true);
-    setError(null);
-    
+  const setApiKeyFunc = useCallback((apiKey: string) => {
+    if (!isClient) return;
+    storeApiKey(apiKey);
+  }, [isClient]);
+
+  // Get API key function
+  const getApiKeyFunc = useCallback((): string | null => {
+    if (!isClient) return null;
+    return getApiKey();
+  }, [isClient]);
+
+  // Validate API key function
+  const validateApiKey = useCallback(async (apiKey: string) => {
+    if (!isClient) {
+      return { valid: false, error: 'Client not ready' };
+    }
+
     try {
       const result = await api.validateApiKey(apiKey);
-      
-      if (result.valid) {
-        storeApiKey(apiKey);
-        setIsLoading(false);
-        return true;
-      } else {
-        setError('Invalid API key');
-        setIsLoading(false);
-        return false;
-      }
+      return result;
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to validate API key');
-      setIsLoading(false);
-      return false;
+      return {
+        valid: false,
+        error: err.response?.data?.detail || 'Failed to validate API key'
+      };
     }
   }, [isClient]);
 
@@ -115,15 +174,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [isClient]);
 
   const value = {
+    user,
     isAuthenticated,
     isLoading,
     error,
     login,
     register,
     logout,
-    setApiKey,
+    setApiKey: setApiKeyFunc,
+    getApiKey: getApiKeyFunc,
     hasApiKey,
-    clearApiKey
+    validateApiKey,
+    refreshUser
   };
 
   return (
