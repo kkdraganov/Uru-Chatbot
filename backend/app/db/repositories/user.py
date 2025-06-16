@@ -1,6 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-from typing import Optional
+from sqlalchemy import select, func
+from typing import Optional, Dict, Any, Union
+from datetime import datetime
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
 from app.core.security import get_password_hash, verify_password
@@ -23,14 +24,28 @@ class UserRepository:
         result = await self.session.execute(query)
         return result.scalars().first()
     
-    async def create(self, data: UserCreate) -> User:
+    async def create(self, data: Union[UserCreate, Dict[str, Any]]) -> User:
         """Create a new user."""
-        user = User(
-            email=data.email,
-            hashed_password=get_password_hash(data.password),
-            is_active=True,
-            role="user"
-        )
+        if isinstance(data, dict):
+            # Handle dict input
+            user = User(
+                email=data["email"],
+                hashed_password=data["hashed_password"],
+                first_name=data.get("first_name"),
+                last_name=data.get("last_name"),
+                is_active=data.get("is_active", True),
+                role=data.get("role", "user")
+            )
+        else:
+            # Handle UserCreate schema
+            user = User(
+                email=data.email,
+                hashed_password=get_password_hash(data.password),
+                first_name=data.first_name,
+                last_name=data.last_name,
+                is_active=True,
+                role=data.role or "user"
+            )
         self.session.add(user)
         await self.session.commit()
         await self.session.refresh(user)
@@ -42,7 +57,7 @@ class UserRepository:
         if not user:
             return None
         
-        update_data = data.dict(exclude_unset=True)
+        update_data = data.model_dump(exclude_unset=True)
         
         # Hash password if provided
         if "password" in update_data:
@@ -62,4 +77,15 @@ class UserRepository:
             return None
         if not verify_password(password, user.hashed_password):
             return None
+        return user
+
+    async def update_last_login(self, user_id: int) -> Optional[User]:
+        """Update user's last login timestamp."""
+        user = await self.get_by_id(user_id)
+        if not user:
+            return None
+
+        user.last_login = func.now()
+        await self.session.commit()
+        await self.session.refresh(user)
         return user
