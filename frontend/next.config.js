@@ -26,7 +26,6 @@ console.log('[NEXT_CONFIG] Final API URL:', apiUrl);
 
 const nextConfig = {
   reactStrictMode: true,
-  swcMinify: true,
   env: {
     NEXT_PUBLIC_API_URL: apiUrl,
   },
