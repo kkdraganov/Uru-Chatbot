@@ -33,15 +33,6 @@ Professional ChatGPT-style interface with real-time streaming and secure API key
 1. **Deploy**
    - Upload `docker-compose.yml` to Elestio
    - Set environment variables in Elestio dashboard:
-     - `INSTANCE=your-instance-name`
-     - `SECRET_KEY=secure-random-key`
-     - `DB_PASSWORD=secure-random-password`
-
-2. **Access**
-   - Frontend: `https://${INSTANCE}.uruenterprises.com`
-   - Backend API: `https://api.${INSTANCE}.uruenterprises.com`
-
-## Environment Variables
 
 | Variable | Default Value | Description |
 |----------|---------------|-------------|
@@ -52,6 +43,9 @@ Professional ChatGPT-style interface with real-time streaming and secure API key
 | **DB_NAME** | `uru_chatbot` | Database name
 | **SECRET_KEY** | `development_secret_key` | JWT secret
 
+2. **Access**
+   - Frontend: `https://${INSTANCE}.uruenterprises.com`
+   - Backend API: `https://api.${INSTANCE}.uruenterprises.com`
 
 ## Security Features
 - Client-side encrypted API keys (never server-stored)

@@ -10,7 +10,7 @@ Browser ──► Next.js 15 ──► FastAPI ──► PostgreSQL
 ## Core Components
 - **Frontend**: Next.js 15 + React 19 with SSE streaming
 - **Backend**: FastAPI with JWT auth and role-based access
-- **Database**: PostgreSQL for metadata only (messages never stored)
+- **Database**: PostgreSQL for database storage
 - **Security**: Client-side encrypted API keys, JWT tokens
 
 ## Backend Structure
