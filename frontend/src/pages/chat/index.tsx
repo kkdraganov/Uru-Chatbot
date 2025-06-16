@@ -1,45 +1,82 @@
-import React from 'react';
-import { useRouter } from 'next/router';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../contexts/ChatContext';
-import Layout from '../../components/layout/Layout';
 import ChatInterface from '../../components/chat/ChatInterface';
-import ConversationList from '../../components/chat/ConversationList';
+import Sidebar from '../../components/chat/Sidebar';
+import Header from '../../components/chat/Header';
+import SettingsModal from '../../components/settings/SettingsModal';
+
 
 const ChatPage: React.FC = () => {
-  const router = useRouter();
-  const { createConversation } = useChat();
-  
-  const handleNewChat = async () => {
-    // Create a new conversation with default model
-    await createConversation('gpt-4o');
-  };
-  
+  const { user, isLoading: authLoading, hasApiKey } = useAuth();
+  const { isLoading: chatLoading } = useChat();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [showApiKeyPrompt, setShowApiKeyPrompt] = useState(false);
+
+  useEffect(() => {
+    // Check if user needs to set up API key
+    if (user && !hasApiKey()) {
+      setShowApiKeyPrompt(true);
+      setSettingsOpen(true);
+    }
+  }, [user, hasApiKey]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Access Denied</h2>
+          <p className="text-gray-600 dark:text-gray-400">Please log in to access the chat interface.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <Layout>
-      <div className="flex h-[calc(100vh-10rem)]">
-        {/* Sidebar */}
-        <div className="w-64 bg-white p-4 border-r border-gray-200 hidden md:block">
-          <ConversationList onNewChat={handleNewChat} />
-        </div>
-        
-        {/* Mobile sidebar button */}
-        <div className="md:hidden fixed bottom-20 left-4 z-10">
-          <button
-            onClick={() => {/* Toggle mobile sidebar */}}
-            className="bg-primary-600 text-white p-3 rounded-full shadow-lg"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
-        
-        {/* Main chat area */}
-        <div className="flex-1 flex flex-col bg-white rounded-lg shadow-sm overflow-hidden">
+    <div className="h-screen bg-gray-50 dark:bg-gray-900 flex overflow-hidden">
+
+      {/* Sidebar */}
+      <div className={`${sidebarOpen ? 'w-80' : 'w-0'} transition-all duration-300 overflow-hidden`}>
+        <Sidebar onClose={() => setSidebarOpen(false)} />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Header */}
+        <Header
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+          onOpenSettings={() => setSettingsOpen(true)}
+          sidebarOpen={sidebarOpen}
+        />
+
+        {/* Chat Interface */}
+        <div className="flex-1 overflow-hidden">
           <ChatInterface />
         </div>
       </div>
-    </Layout>
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => {
+          setSettingsOpen(false);
+          setShowApiKeyPrompt(false);
+        }}
+        showApiKeyPrompt={showApiKeyPrompt}
+      />
+    </div>
   );
 };
 
