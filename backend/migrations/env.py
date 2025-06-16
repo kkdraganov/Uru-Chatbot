@@ -1,4 +1,5 @@
 from logging.config import fileConfig
+import os
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
@@ -40,7 +41,12 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    # Get database URL from environment variable or config
+    url = os.getenv("DATABASE_URL") or config.get_main_option("sqlalchemy.url")
+    # Convert asyncpg URL to psycopg2 for Alembic
+    if url and "postgresql+asyncpg" in url:
+        url = url.replace("postgresql+asyncpg", "postgresql")
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -59,8 +65,18 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    # Get database URL from environment variable
+    database_url = os.getenv("DATABASE_URL")
+    if database_url and "postgresql+asyncpg" in database_url:
+        database_url = database_url.replace("postgresql+asyncpg", "postgresql")
+
+    # Update config with environment database URL if available
+    configuration = config.get_section(config.config_ini_section, {})
+    if database_url:
+        configuration["sqlalchemy.url"] = database_url
+
     connectable = engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        configuration,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
