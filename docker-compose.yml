@@ -3,6 +3,10 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - ENVIRONMENT=${ENVIRONMENT:-production}
+        - INSTANCE=${INSTANCE:-dev}
+        - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
     ports:
       - "3000:3000"
     environment:
