@@ -1,5 +1,8 @@
 import React, { useState, FormEvent, useRef, useEffect } from 'react';
 import { useChat } from '../../contexts/ChatContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { PaperAirplaneIcon, StopIcon } from '@heroicons/react/24/outline';
+
 
 interface ChatInputProps {
   disabled?: boolean;
@@ -7,30 +10,59 @@ interface ChatInputProps {
 
 const ChatInput: React.FC<ChatInputProps> = ({ disabled = false }) => {
   const [message, setMessage] = useState<string>('');
-  const { sendMessage, isLoading } = useChat();
+  const { sendMessage, isLoading, stopGeneration, currentConversation } = useChat();
+  const { hasApiKey } = useAuth();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
+
   // Handle form submission
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
-    if (!message.trim() || isLoading) return;
-    
-    // Send message
-    await sendMessage(message);
-    
-    // Clear input
-    setMessage('');
+
+    if (!message.trim() || isLoading || disabled) return;
+
+    if (!hasApiKey()) {
+      console.error('Please set your OpenAI API key in settings');
+      return;
+    }
+
+    if (!currentConversation) {
+      console.error('Please select or create a conversation');
+      return;
+    }
+
+    try {
+      // Send message
+      await sendMessage(message.trim());
+
+      // Clear input
+      setMessage('');
+
+      // Reset textarea height
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+      }
+    } catch (error) {
+      console.error('Failed to send message:', error);
+    }
   };
-  
+
+  // Handle stop generation
+  const handleStop = () => {
+    if (stopGeneration) {
+      stopGeneration();
+    }
+  };
+
   // Auto-resize textarea based on content
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 120; // max-h-30 equivalent
+      textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
     }
   }, [message]);
-  
+
   // Handle keyboard shortcuts
   const handleKeyDown = (e: React.KeyboardEvent) => {
     // Submit on Enter (without Shift)
@@ -39,39 +71,97 @@ const ChatInput: React.FC<ChatInputProps> = ({ disabled = false }) => {
       handleSubmit(e);
     }
   };
-  
+
+  // Focus textarea when conversation changes
+  useEffect(() => {
+    if (currentConversation && textareaRef.current && !disabled) {
+      textareaRef.current.focus();
+    }
+  }, [currentConversation, disabled]);
+
+  const isDisabled = disabled || !hasApiKey() || !currentConversation;
+  const canSend = message.trim() && !isDisabled && !isLoading;
+
   return (
-    <div className="border-t border-gray-200 bg-white p-4 sticky bottom-0">
-      <form onSubmit={handleSubmit} className="flex flex-col">
-        <div className="relative flex-grow">
-          <textarea
-            ref={textareaRef}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="Type your message..."
-            className="w-full border border-gray-300 rounded-xl py-3 px-4 pr-12 resize-none max-h-32 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            rows={1}
-            disabled={disabled || isLoading}
-          />
-          <button
-            type="submit"
-            disabled={!message.trim() || disabled || isLoading}
-            className={`absolute right-3 bottom-3 rounded-lg p-1 ${
-              !message.trim() || disabled || isLoading
-                ? 'text-gray-400 cursor-not-allowed'
-                : 'text-primary-600 hover:bg-primary-50'
-            }`}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-              <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
-            </svg>
-          </button>
-        </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Press Enter to send, Shift+Enter for new line
-        </p>
-      </form>
+    <div className="p-4 bg-white dark:bg-gray-900">
+      <div className="max-w-4xl mx-auto">
+        <form onSubmit={handleSubmit} className="relative">
+          <div className="relative flex items-end space-x-3">
+            {/* Textarea */}
+            <div className="flex-1 relative">
+              <textarea
+                ref={textareaRef}
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder={
+                  isDisabled
+                    ? !hasApiKey()
+                      ? "Please set your API key in settings..."
+                      : !currentConversation
+                      ? "Select a conversation to start chatting..."
+                      : "Type your message..."
+                    : "Type your message..."
+                }
+                className={`w-full border rounded-2xl py-3 px-4 pr-12 resize-none transition-all duration-200 ${
+                  isDisabled
+                    ? 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                    : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                } placeholder-gray-400 dark:placeholder-gray-500`}
+                rows={1}
+                disabled={isDisabled}
+                maxLength={10000}
+              />
+
+              {/* Character count */}
+              {message.length > 8000 && (
+                <div className="absolute bottom-1 left-3 text-xs text-gray-400">
+                  {message.length}/10000
+                </div>
+              )}
+            </div>
+
+            {/* Send/Stop button */}
+            <div className="flex-shrink-0">
+              {isLoading ? (
+                <button
+                  type="button"
+                  onClick={handleStop}
+                  className="p-3 bg-red-600 hover:bg-red-700 text-white rounded-2xl transition-colors"
+                  title="Stop generation"
+                >
+                  <StopIcon className="h-5 w-5" />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={!canSend}
+                  className={`p-3 rounded-2xl transition-colors ${
+                    canSend
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                  }`}
+                  title="Send message"
+                >
+                  <PaperAirplaneIcon className="h-5 w-5" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Help text */}
+          <div className="flex items-center justify-between mt-2 text-xs text-gray-500 dark:text-gray-400">
+            <span>
+              Press Enter to send, Shift+Enter for new line
+            </span>
+            {currentConversation && (
+              <span>
+                Model: {currentConversation.model}
+              </span>
+            )}
+          </div>
+        </form>
+      </div>
     </div>
   );
 };
