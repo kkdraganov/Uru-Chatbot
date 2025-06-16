@@ -9,14 +9,15 @@ const ApiKeyForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!apiKey.trim()) return;
-    
-    const success = await saveApiKey(apiKey);
-    
-    if (success) {
+
+    try {
+      saveApiKey(apiKey);
       setSuccessMessage('API key saved successfully');
       setTimeout(() => setSuccessMessage(''), 3000);
+    } catch (error) {
+      console.error('Failed to save API key:', error);
     }
   };
 

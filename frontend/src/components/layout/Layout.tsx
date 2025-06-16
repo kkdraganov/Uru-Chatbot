@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { useAuth } from '../../contexts/AuthContext';
 
 interface LayoutProps {
@@ -22,12 +23,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             
             {isAuthenticated && (
               <div className="flex items-center">
-                <a
+                <Link
                   href="/settings"
                   className="px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
                 >
                   Settings
-                </a>
+                </Link>
                 <button
                   onClick={logout}
                   className="ml-4 px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-50"
