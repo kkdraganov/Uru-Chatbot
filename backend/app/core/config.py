@@ -17,7 +17,7 @@ class Settings(BaseSettings):
 
     # API settings (constants)
     API_V1_STR: str = "/api"
-    PROJECT_NAME: str = "Uru ChatGPT Interface"
+    PROJECT_NAME: str = "Uru Chatbot"
 
     # Security settings
     SECRET_KEY: str = os.getenv("SECRET_KEY", "development_secret_key")
@@ -106,9 +106,19 @@ class Settings(BaseSettings):
         "gpt-4o",
         "gpt-4o-mini",
         "o1",
-        "o3",
-        "o3-mini"
+        "o1-mini",
+        "gpt-4-turbo",
+        "gpt-4",
+        "gpt-3.5-turbo"
     ]
+
+    # Rate limiting settings
+    RATE_LIMIT_PER_MINUTE: int = 60
+    RATE_LIMIT_PER_HOUR: int = 1000
+
+    # Security settings
+    MAX_MESSAGE_LENGTH: int = 10000
+    MAX_CONVERSATION_HISTORY: int = 100
     
     class Config:
         case_sensitive = True

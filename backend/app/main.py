@@ -6,6 +6,8 @@ import logging
 
 from app.api.router import api_router
 from app.core.config import settings
+# Import models to ensure they are registered
+from app.models import User, Conversation, Message
 
 # Configure logging
 logger = logging.getLogger(__name__)
@@ -40,7 +42,7 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 async def root():
     return JSONResponse(
         content={
-            "message": "Welcome to Uru ChatGPT Interface API",
+            "message": "Welcome to the Uru Chatbot API",
             "docs_url": "/docs",
             "health_check": "/health"
         }

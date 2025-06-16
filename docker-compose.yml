@@ -8,11 +8,11 @@ services:
         - INSTANCE=${INSTANCE:-dev}
         - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
     ports:
-      - "172.17.0.1:3000:3000"
+      - "3000:3000"
     environment:
       - ENVIRONMENT=${ENVIRONMENT:-production}
       - INSTANCE=${INSTANCE:-dev}
-      - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
     depends_on:
       - backend
     restart: always
@@ -24,12 +24,12 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     ports:
-      - "172.17.0.1:8000:8000"
+      - "8000:8000"
     environment:
       - SECRET_KEY=${SECRET_KEY:-development_secret_key}
       - INSTANCE=${INSTANCE:-dev}
       - DATABASE_URL=postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-uru_chatbot}
-      - CORS_ORIGINS=["https://${INSTANCE}.uruenterprises.com","https://api.${INSTANCE}.uruenterprises.com"]
+      - CORS_ORIGINS=["http://localhost:3000","http://127.0.0.1:3000"]
       - ENVIRONMENT=${ENVIRONMENT:-production}
     depends_on:
       - db
