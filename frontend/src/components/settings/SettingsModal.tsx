@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, Transition, Tab } from '@headlessui/react';
 import { Fragment } from 'react';
-import { XMarkIcon, EyeIcon, EyeSlashIcon, CheckCircleIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, EyeIcon, EyeSlashIcon, CheckCircleIcon, ExclamationTriangleIcon, SunIcon, MoonIcon, ComputerDesktopIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
 
 
 interface SettingsModalProps {
@@ -17,6 +18,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   showApiKeyPrompt = false 
 }) => {
   const { user, setApiKey, getApiKey, validateApiKey } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [apiKey, setApiKeyValue] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
   const [validating, setValidating] = useState(false);
@@ -297,9 +299,36 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     <Tab.Panel className="space-y-4">
                       <div>
                         <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-4">Preferences</h3>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">
-                          Preference settings will be available in a future update.
-                        </p>
+
+                        {/* Theme Selection */}
+                        <div className="space-y-3">
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                            Theme
+                          </label>
+                          <div className="grid grid-cols-3 gap-3">
+                            {[
+                              { value: 'light', label: 'Light', icon: SunIcon },
+                              { value: 'dark', label: 'Dark', icon: MoonIcon },
+                              { value: 'system', label: 'System', icon: ComputerDesktopIcon }
+                            ].map(({ value, label, icon: Icon }) => (
+                              <button
+                                key={value}
+                                onClick={() => setTheme(value as any)}
+                                className={`flex flex-col items-center p-3 rounded-lg border-2 transition-colors ${
+                                  theme === value
+                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                                    : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
+                                }`}
+                              >
+                                <Icon className="h-6 w-6 mb-2" />
+                                <span className="text-sm font-medium">{label}</span>
+                              </button>
+                            ))}
+                          </div>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            System theme follows your device's appearance settings.
+                          </p>
+                        </div>
                       </div>
                     </Tab.Panel>
                   </Tab.Panels>

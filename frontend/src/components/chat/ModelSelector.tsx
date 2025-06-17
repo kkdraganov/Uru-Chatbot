@@ -10,8 +10,6 @@ interface ModelInfo {
   name: string;
   description: string;
   context_length: number;
-  input_cost_per_token: number;
-  output_cost_per_token: number;
   supports_streaming: boolean;
 }
 
@@ -37,8 +35,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
       name: 'GPT-4o',
       description: 'Most advanced multimodal model',
       context_length: 128000,
-      input_cost_per_token: 0.005 / 1000,
-      output_cost_per_token: 0.015 / 1000,
       supports_streaming: true
     },
     {
@@ -46,8 +42,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
       name: 'GPT-4o Mini',
       description: 'Fast and efficient model for simple tasks',
       context_length: 128000,
-      input_cost_per_token: 0.00015 / 1000,
-      output_cost_per_token: 0.0006 / 1000,
       supports_streaming: true
     },
     {
@@ -55,8 +49,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
       name: 'o1',
       description: 'Advanced reasoning model',
       context_length: 200000,
-      input_cost_per_token: 0.015 / 1000,
-      output_cost_per_token: 0.06 / 1000,
       supports_streaming: false
     },
     {
@@ -64,8 +56,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
       name: 'o1 Mini',
       description: 'Efficient reasoning model',
       context_length: 128000,
-      input_cost_per_token: 0.003 / 1000,
-      output_cost_per_token: 0.012 / 1000,
       supports_streaming: false
     }
   ];
@@ -107,9 +97,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
     }
   };
 
-  const formatCost = (cost: number) => {
-    return `$${(cost * 1000).toFixed(4)}/1K tokens`;
-  };
+
 
   return (
     <Listbox value={currentModel} onChange={handleModelChange} disabled={disabled || loading}>
@@ -168,8 +156,6 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({
                       </span>
                       <div className={`flex items-center space-x-4 text-xs mt-1 ${active ? 'text-blue-200' : 'text-gray-400'}`}>
                         <span>{model.context_length.toLocaleString()} tokens</span>
-                        <span>In: {formatCost(model.input_cost_per_token)}</span>
-                        <span>Out: {formatCost(model.output_cost_per_token)}</span>
                       </div>
                     </div>
 

@@ -17,7 +17,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex justify-between h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0 flex items-center">
-                <span className="text-xl font-bold text-primary-600">Uru ChatGPT</span>
+                <span className="text-xl font-bold text-primary-600">Uru Chatbot</span>
               </div>
             </div>
             

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/router';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ChatProvider } from '../contexts/ChatContext';
+import { ThemeProvider } from '../contexts/ThemeContext';
 import '../styles/globals.css';
 
 function MyApp({ Component, pageProps }) {
@@ -18,11 +19,13 @@ function MyApp({ Component, pageProps }) {
   }
   
   return (
-    <AuthProvider>
-      <ChatProvider>
-        <Component {...pageProps} />
-      </ChatProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <ChatProvider>
+          <Component {...pageProps} />
+        </ChatProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
