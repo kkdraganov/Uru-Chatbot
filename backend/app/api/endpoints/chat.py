@@ -1,10 +1,6 @@
-import asyncio
-import time
-import hashlib
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-import uuid
 import json
 import logging
 
@@ -14,11 +10,10 @@ from app.db.repositories.message import MessageRepository
 from app.models.user import User
 from app.api.dependencies import get_current_active_user
 from app.schemas.chat import (
-    ChatRequest, ChatResponse, ValidateKeyRequest, ValidateKeyResponse,
-    StreamChunk, ModelInfo, AvailableModelsResponse
+    ChatRequest, ValidateKeyRequest, ValidateKeyResponse,
+    ModelInfo, AvailableModelsResponse
 )
 from app.adapters.factory import AdapterFactory
-from app.streaming.sse import SSEResponse
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -245,7 +240,7 @@ async def get_available_models(
             detail=f"Error getting available models: {str(e)}"
         )
 
-@router.get("/models/{model_id}")
+@router.get("/models/{model_id}", response_model=ModelInfo)
 async def get_model_info(
     model_id: str,
     current_user: User = Depends(get_current_active_user)
