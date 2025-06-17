@@ -1,6 +1,6 @@
 # Uru Chatbot
 
-Professional ChatGPT-style interface with real-time streaming, secure API key management, and conversation history.
+Professional AI chat interface with real-time streaming, secure API key management, and conversation history.
 
 ## Features
 - **Real-time Streaming**: Live responses with Server-Sent Events

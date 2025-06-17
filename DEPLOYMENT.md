@@ -1,7 +1,7 @@
 # Deployment Guide
 
 ## Overview
-Professional ChatGPT-style interface with real-time streaming and secure API key management.
+Professional AI chat interface with real-time streaming and secure API key management.
 
 ## Requirements
 - Docker & Docker Compose

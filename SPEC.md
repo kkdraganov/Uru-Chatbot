@@ -1,9 +1,9 @@
 # Uru Chatbot - Build Requirements
 
-Build a professional AI chat interface application using Next.js 15 + FastAPI that allows clients to use their own OpenAI API keys for ChatGPT-style conversations, with enterprise-grade features and multi-model support. Call it "Uru Chatbot." The application should meet the following requirements: 
+Build a professional AI chat interface application using Next.js 15 + FastAPI that allows clients to use their own OpenAI API keys for AI-powered conversations, with enterprise-grade features and multi-model support. Call it "Uru Chatbot." The application should meet the following requirements:
 
 ## 1. User Interface:
-- Create a **ChatGPT-style interface** with a modern, professional design matching contemporary AI chat applications.
+- Create a **modern AI chat interface** with a professional design matching contemporary AI chat applications.
 - Implement a **responsive chat layout** with:
   - **Message container**: Scrollable chat history with user and assistant message bubbles
   - **Model selector dropdown**: Prominent header element for switching between OpenAI models (GPT-4o, GPT-4o-mini, o1, o1-mini, GPT-4-turbo, GPT-4, GPT-3.5-turbo) 
