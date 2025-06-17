@@ -51,14 +51,19 @@ class Settings(BaseSettings):
     def CORS_ORIGINS(self) -> List[str]:
         # Allow manual override from environment
         cors_env = os.getenv("CORS_ORIGINS")
+        # DEBUG: Log raw CORS environment variable (config.py:CORS_ORIGINS)
+        logger.info(f"[CONFIG] Raw CORS_ORIGINS env var: '{cors_env}'")
+        logger.info(f"[CONFIG] INSTANCE: '{self.INSTANCE}', is_production: {self.is_production}")
+
         if cors_env and cors_env.strip():  # Check for non-empty string
             try:
                 parsed_cors = json.loads(cors_env)
                 # DEBUG: Log CORS origins from environment (config.py:CORS_ORIGINS)
                 logger.info(f"[CONFIG] CORS_ORIGINS from env (parsed JSON): {parsed_cors}")
                 return parsed_cors
-            except json.JSONDecodeError:
+            except json.JSONDecodeError as e:
                 # DEBUG: Log CORS origins from environment (config.py:CORS_ORIGINS)
+                logger.warning(f"[CONFIG] Failed to parse CORS_ORIGINS as JSON: {e}")
                 logger.info(f"[CONFIG] CORS_ORIGINS from env (single string): {cors_env}")
                 return [cors_env]
 
@@ -72,7 +77,13 @@ class Settings(BaseSettings):
             logger.info(f"[CONFIG] CORS_ORIGINS auto-configured for production: {auto_cors}")
             return auto_cors
         else:
-            dev_cors = ["http://localhost:3000"]
+            # More comprehensive development CORS origins
+            dev_cors = [
+                "http://localhost:3000",
+                "http://localhost:8000",
+                "http://127.0.0.1:3000",
+                "http://127.0.0.1:8000"
+            ]
             # DEBUG: Log auto-configured CORS origins (config.py:CORS_ORIGINS)
             logger.info(f"[CONFIG] CORS_ORIGINS auto-configured for development: {dev_cors}")
             return dev_cors
