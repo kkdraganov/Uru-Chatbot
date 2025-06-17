@@ -4,6 +4,7 @@ import axios from 'axios';
 function getApiUrl(): string {
   // DEBUG: Log environment variable check (api.ts:getApiUrl)
   console.log('[API] Checking NEXT_PUBLIC_API_URL from env:', process.env.NEXT_PUBLIC_API_URL);
+  console.log('[API] Environment check - ENVIRONMENT:', process.env.ENVIRONMENT);
 
   // First, try the explicit environment variable
   if (process.env.NEXT_PUBLIC_API_URL) {
@@ -11,10 +12,24 @@ function getApiUrl(): string {
     return process.env.NEXT_PUBLIC_API_URL;
   }
 
+  // Check if we're explicitly in development mode
+  const isDevelopment = process.env.ENVIRONMENT === 'development';
+
+  if (isDevelopment) {
+    console.log('[API] Development mode detected, using localhost');
+    return 'http://localhost:8000/api';
+  }
+
   // If we're in the browser, try to detect from current location
   if (typeof window !== 'undefined') {
     const hostname = window.location.hostname;
     console.log('[API] Browser detected, current hostname:', hostname);
+
+    // For localhost or development domains, use localhost backend
+    if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.')) {
+      console.log('[API] Local development hostname detected, using localhost backend');
+      return 'http://localhost:8000/api';
+    }
 
     // Check if we're on a production domain
     if (hostname.includes('.uruenterprises.com')) {

@@ -18,20 +18,29 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
-  const { 
-    conversations, 
-    createConversation, 
+  const {
+    conversations,
+    createConversation,
     isLoading,
-    error 
+    error
   } = useChat();
-  const { hasApiKey } = useAuth();
+  const { hasApiKey, isAuthenticated, user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [showPinned, setShowPinned] = useState(false);
 
   const handleNewChat = async () => {
+    // Check authentication first
+    if (!isAuthenticated || !user) {
+      console.error('User not authenticated');
+      alert('Please log in to create conversations');
+      return;
+    }
+
+    // Check API key
     if (!hasApiKey()) {
       console.error('Please set your OpenAI API key in settings first');
+      alert('Please set your OpenAI API key in settings first');
       return;
     }
 
@@ -39,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       await createConversation('gpt-4o');
       console.log('New conversation created');
     } catch (error) {
-      console.error('Failed to create new conversation');
+      console.error('Failed to create new conversation:', error);
     }
   };
 
@@ -80,12 +89,36 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         {/* New Chat Button */}
         <button
           onClick={handleNewChat}
-          disabled={isLoading}
+          disabled={isLoading || !isAuthenticated || !user || !hasApiKey()}
           className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg transition-colors"
+          title={
+            !isAuthenticated || !user
+              ? "Please log in to create conversations"
+              : !hasApiKey()
+              ? "Please set your OpenAI API key in settings"
+              : "Create a new conversation"
+          }
         >
           <PlusIcon className="h-4 w-4" />
           <span>New Chat</span>
         </button>
+
+        {/* Authentication/API Key Status */}
+        {(!isAuthenticated || !user) && (
+          <div className="mt-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <p className="text-xs text-yellow-800 dark:text-yellow-200">
+              Please log in to create conversations
+            </p>
+          </div>
+        )}
+
+        {isAuthenticated && user && !hasApiKey() && (
+          <div className="mt-2 p-2 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+            <p className="text-xs text-orange-800 dark:text-orange-200">
+              Please set your OpenAI API key in settings
+            </p>
+          </div>
+        )}
 
         {/* Search */}
         <div className="mt-4 relative">

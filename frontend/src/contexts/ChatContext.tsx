@@ -98,7 +98,24 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   
   // Create a new conversation
   const createConversation = useCallback(async (model: string, title?: string) => {
-    if (!isClient || !user) return;
+    if (!isClient) {
+      console.error('Client not initialized');
+      return;
+    }
+
+    if (!user) {
+      console.error('User not authenticated - cannot create conversation');
+      setError('Please log in to create conversations');
+      return;
+    }
+
+    // Check if user has a valid token
+    const token = localStorage.getItem('token');
+    if (!token) {
+      console.error('No authentication token found');
+      setError('Authentication required. Please log in again.');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -116,9 +133,20 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('New conversation created');
     } catch (err: any) {
       console.error('Failed to create conversation:', err);
-      setError(err.response?.data?.detail || 'Failed to create conversation');
+
+      // Handle specific error cases
+      if (err.response?.status === 401) {
+        setError('Authentication expired. Please log in again.');
+        // Clear invalid token
+        localStorage.removeItem('token');
+        localStorage.removeItem('userId');
+      } else if (err.response?.status === 403) {
+        setError('You do not have permission to create conversations.');
+      } else {
+        setError(err.response?.data?.detail || err.message || 'Failed to create conversation');
+      }
+
       setIsLoading(false);
-      console.error('Failed to create conversation');
     }
   }, [isClient, user]);
   
