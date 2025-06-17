@@ -72,10 +72,10 @@
 **/*.db
 # Keep initial migration but exclude auto-generated ones
 **/migrations/versions/__pycache__/
-# Uncomment the line below if you want to exclude all migration versions
-# **/migrations/versions/*.py
 
 # Cache and temporary files
 **/.cache/
 **/.parcel-cache/
 **/storybook-static/
+openapi_formatted.json
+openapi.json

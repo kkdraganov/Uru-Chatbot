@@ -51,6 +51,7 @@ services:
 
 volumes:
   postgres_data:
+  app_data:
 
 networks:
   app-network:
