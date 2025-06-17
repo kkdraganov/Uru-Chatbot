@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { useAuth } from '../../contexts/AuthContext';
 import { useChat } from '../../contexts/ChatContext';
 import ChatInterface from '../../components/chat/ChatInterface';
@@ -8,6 +9,7 @@ import SettingsModal from '../../components/settings/SettingsModal';
 
 
 const ChatPage: React.FC = () => {
+  const router = useRouter();
   const { user, isLoading: authLoading, hasApiKey } = useAuth();
   const { isLoading: chatLoading } = useChat();
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -15,12 +17,18 @@ const ChatPage: React.FC = () => {
   const [showApiKeyPrompt, setShowApiKeyPrompt] = useState(false);
 
   useEffect(() => {
+    // Redirect to login if not authenticated and not loading
+    if (!authLoading && !user) {
+      router.push('/login');
+      return;
+    }
+
     // Check if user needs to set up API key
     if (user && !hasApiKey()) {
       setShowApiKeyPrompt(true);
       setSettingsOpen(true);
     }
-  }, [user, hasApiKey]);
+  }, [user, hasApiKey, authLoading, router]);
 
   if (authLoading) {
     return (
@@ -37,8 +45,8 @@ const ChatPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-semibold text-gray-800 dark:text-gray-200 mb-4">Access Denied</h2>
-          <p className="text-gray-600 dark:text-gray-400">Please log in to access the chat interface.</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Redirecting to login...</p>
         </div>
       </div>
     );

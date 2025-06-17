@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { useAuth } from './AuthContext';
 import { api } from '../lib/api';
 
@@ -46,7 +47,8 @@ interface ChatContextType {
 const ChatContext = createContext<ChatContextType | undefined>(undefined);
 
 export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { user, getApiKey, hasApiKey } = useAuth();
+  const { user, getApiKey } = useAuth();
+  const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -54,6 +56,17 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [streamingMessage, setStreamingMessage] = useState<string>('');
   const [isClient, setIsClient] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
+
+  // Helper function to handle unauthorized errors
+  const handleUnauthorizedError = useCallback(() => {
+    // Clear tokens
+    localStorage.removeItem('token');
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('userId');
+
+    // Redirect to login
+    router.push('/login');
+  }, [router]);
 
   // Initialize client-side state
   useEffect(() => {
@@ -72,19 +85,33 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     try {
       const data = await api.getConversations();
-      setConversations(data);
+
+      // Ensure all conversations have messages array initialized
+      const conversationsWithMessages = data.map((conv: any) => ({
+        ...conv,
+        messages: conv.messages || []
+      }));
+
+      setConversations(conversationsWithMessages);
 
       // If no current conversation and we have conversations, select the most recent one
-      if (!currentConversation && data.length > 0) {
-        setCurrentConversation(data[0]);
+      if (!currentConversation && conversationsWithMessages.length > 0) {
+        setCurrentConversation(conversationsWithMessages[0]);
       }
     } catch (err: any) {
       console.error('Failed to load conversations:', err);
+
+      // Handle unauthorized errors by redirecting to login
+      if (err.response?.status === 401) {
+        handleUnauthorizedError();
+        return;
+      }
+
       setError(err.response?.data?.detail || 'Failed to load conversations');
     } finally {
       setIsLoading(false);
     }
-  }, [isClient, user, currentConversation]);
+  }, [isClient, user, currentConversation, handleUnauthorizedError]);
   
   // Stop generation function
   const stopGeneration = useCallback(() => {
@@ -126,8 +153,14 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         model
       });
 
-      setConversations(prev => [newConversation, ...prev]);
-      setCurrentConversation(newConversation);
+      // Ensure messages array is initialized
+      const conversationWithMessages = {
+        ...newConversation,
+        messages: newConversation.messages || []
+      };
+
+      setConversations(prev => [conversationWithMessages, ...prev]);
+      setCurrentConversation(conversationWithMessages);
       setIsLoading(false);
 
       console.log('New conversation created');
@@ -136,10 +169,8 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Handle specific error cases
       if (err.response?.status === 401) {
-        setError('Authentication expired. Please log in again.');
-        // Clear invalid token
-        localStorage.removeItem('token');
-        localStorage.removeItem('userId');
+        handleUnauthorizedError();
+        return;
       } else if (err.response?.status === 403) {
         setError('You do not have permission to create conversations.');
       } else {
@@ -148,7 +179,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       setIsLoading(false);
     }
-  }, [isClient, user]);
+  }, [isClient, user, handleUnauthorizedError]);
   
   // Select an existing conversation
   const selectConversation = useCallback(async (id: string) => {
@@ -171,15 +202,27 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else {
         // Fetch from API if not in local state
         const fetchedConversation = await api.getConversation(id);
-        setCurrentConversation(fetchedConversation);
+        // Ensure messages array is initialized
+        const conversationWithMessages = {
+          ...fetchedConversation,
+          messages: fetchedConversation.messages || []
+        };
+        setCurrentConversation(conversationWithMessages);
       }
       setIsLoading(false);
     } catch (err: any) {
       console.error('Failed to load conversation:', err);
+
+      // Handle unauthorized errors by redirecting to login
+      if (err.response?.status === 401) {
+        handleUnauthorizedError();
+        return;
+      }
+
       setError(err.response?.data?.detail || 'Failed to load conversation');
       setIsLoading(false);
     }
-  }, [isClient, user, conversations, abortController]);
+  }, [isClient, user, conversations, abortController, handleUnauthorizedError]);
   
   // Send a message in the current conversation
   const sendMessage = useCallback(async (content: string) => {
@@ -218,7 +261,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setAbortController(controller);
 
       // Send message and get streaming response
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/message`, {
+      const response = await fetch(`${api.getApiUrl()}/chat/message`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -234,7 +277,11 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        if (response.status === 401) {
+          handleUnauthorizedError();
+          return;
+        }
+        throw new Error(`HTTP error - status: ${response.status}`);
       }
 
       // Handle streaming response
@@ -270,6 +317,14 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                   timestamp: new Date().toISOString(),
                   model: currentConversation.model
                 };
+
+                // Add message_id and cost if available from backend
+                if (data.message_id) {
+                  (finalAssistantMessage as any).messageId = data.message_id;
+                }
+                if (data.cost) {
+                  (finalAssistantMessage as any).cost = data.cost;
+                }
 
                 setCurrentConversation(prev => {
                   if (!prev) return null;
@@ -309,7 +364,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setStreamingMessage('');
       setAbortController(null);
     }
-  }, [currentConversation, isClient, user, getApiKey, refreshConversations]);
+  }, [currentConversation, isClient, user, getApiKey, refreshConversations, handleUnauthorizedError]);
   
   // Update conversation title
   const updateConversationTitle = useCallback(async (id: string, title: string) => {
@@ -332,9 +387,16 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       }
     } catch (err: any) {
       console.error('Failed to update conversation title:', err);
+
+      // Handle unauthorized errors by redirecting to login
+      if (err.response?.status === 401) {
+        handleUnauthorizedError();
+        return;
+      }
+
       setError('Failed to update conversation title');
     }
-  }, [currentConversation, isClient, user]);
+  }, [currentConversation, isClient, user, handleUnauthorizedError]);
 
   // Delete a conversation
   const deleteConversation = useCallback(async (id: string) => {
@@ -354,10 +416,16 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       console.log('Conversation deleted');
     } catch (err: any) {
       console.error('Failed to delete conversation:', err);
+
+      // Handle unauthorized errors by redirecting to login
+      if (err.response?.status === 401) {
+        handleUnauthorizedError();
+        return;
+      }
+
       setError('Failed to delete conversation');
-      console.error('Failed to delete conversation');
     }
-  }, [currentConversation, isClient, user]);
+  }, [currentConversation, isClient, user, handleUnauthorizedError]);
 
   // Change the model for the current conversation
   const changeModel = useCallback(async (model: string) => {
@@ -379,9 +447,16 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
     } catch (err: any) {
       console.error('Failed to change model:', err);
+
+      // Handle unauthorized errors by redirecting to login
+      if (err.response?.status === 401) {
+        handleUnauthorizedError();
+        return;
+      }
+
       setError('Failed to change model');
     }
-  }, [currentConversation, isClient, user]);
+  }, [currentConversation, isClient, user, handleUnauthorizedError]);
 
   // Clean up abort controller on unmount
   useEffect(() => {

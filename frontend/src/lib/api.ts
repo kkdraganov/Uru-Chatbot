@@ -189,9 +189,9 @@ export const api = {
   // Chat endpoints
   sendMessage: async (conversationId: string, message: string, apiKey: string, model?: string) => {
     const response = await apiClient.post('/chat/message', {
-      conversationId,
+      conversation_id: parseInt(conversationId),
       message,
-      apiKey,
+      api_key: apiKey,
       model
     });
     return response.data;

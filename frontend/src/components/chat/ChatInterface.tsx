@@ -75,7 +75,7 @@ const ChatInterface: React.FC = () => {
               </div>
             </div>
           </div>
-        ) : currentConversation.messages.length === 0 && !streamingMessage ? (
+        ) : currentConversation && currentConversation.messages.length === 0 && !streamingMessage ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center p-8 max-w-md">
               <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl flex items-center justify-center">
@@ -93,7 +93,7 @@ const ChatInterface: React.FC = () => {
               </div>
             </div>
           </div>
-        ) : (
+        ) : currentConversation ? (
           <div className="max-w-4xl mx-auto space-y-6">
             {currentConversation.messages.map((message, index) => (
               <ChatMessage
@@ -132,7 +132,7 @@ const ChatInterface: React.FC = () => {
 
             <div ref={messagesEndRef} />
           </div>
-        )}
+        ) : null}
 
         {/* Scroll to bottom button */}
         {!isAtBottom && currentConversation && currentConversation.messages.length > 0 && (
