@@ -16,9 +16,24 @@ const LoginPage: React.FC = () => {
     
     if (!email || !password) return;
     
-    if (isRegister && password.length < 8) {
-      setError('Password must be at least 8 characters long');
-      return;
+    if (isRegister) {
+      // Validate password requirements
+      if (password.length < 8) {
+        setError('Password must be at least 8 characters long');
+        return;
+      }
+      if (!/[A-Z]/.test(password)) {
+        setError('Password must contain at least one uppercase letter');
+        return;
+      }
+      if (!/[a-z]/.test(password)) {
+        setError('Password must contain at least one lowercase letter');
+        return;
+      }
+      if (!/[0-9]/.test(password)) {
+        setError('Password must contain at least one digit');
+        return;
+      }
     }
     
     let success;
@@ -87,6 +102,11 @@ const LoginPage: React.FC = () => {
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                   placeholder="••••••••"
                 />
+                {isRegister && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Password must be at least 8 characters and contain uppercase, lowercase, and a number
+                  </p>
+                )}
               </div>
             </div>
 

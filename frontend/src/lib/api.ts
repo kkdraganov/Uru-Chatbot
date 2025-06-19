@@ -107,13 +107,32 @@ apiClient.interceptors.response.use(
         window.location.href = '/login';
       }
     }
-    
+
+    // Handle validation errors (422)
+    if (error.response.status === 422) {
+      const validationErrors = error.response?.data?.detail;
+      if (Array.isArray(validationErrors)) {
+        // Extract validation error messages
+        const errorMessages = validationErrors.map(err => {
+          if (err.loc && err.msg) {
+            const field = err.loc[err.loc.length - 1]; // Get the field name
+            return `${field}: ${err.msg}`;
+          }
+          return err.msg || 'Validation error';
+        });
+        const errorMessage = errorMessages.join(', ');
+        return Promise.reject(new Error(errorMessage));
+      } else if (typeof validationErrors === 'string') {
+        return Promise.reject(new Error(validationErrors));
+      }
+    }
+
     // Handle registration errors specifically
     if (error.response.status === 400 && error.config.url?.includes('/auth/register')) {
       const errorMessage = error.response?.data?.detail || 'Registration failed. Please check your input and try again.';
       return Promise.reject(new Error(errorMessage));
     }
-    
+
     // Handle other errors
     const errorMessage = error.response?.data?.detail || 'An unexpected error occurred';
     return Promise.reject(new Error(errorMessage));
