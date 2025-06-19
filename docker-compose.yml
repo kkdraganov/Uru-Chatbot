@@ -26,11 +26,12 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - SECRET_KEY=${SECRET_KEY:-development_secret_key}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
       - INSTANCE=${INSTANCE:-dev}
       - DATABASE_URL=postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-uru_chatbot}
       - CORS_ORIGINS=["https://${INSTANCE}.uruenterprises.com","https://api.${INSTANCE}.uruenterprises.com"]
-      - ENVIRONMENT=${ENVIRONMENT:-production}
+      - SECRET_KEY=${SECRET_KEY:-development_secret_key}
+      - MODEL_API_KEY=${MODEL_API_KEY:-your_openai_api_key}
     depends_on:
       - db
     restart: always
