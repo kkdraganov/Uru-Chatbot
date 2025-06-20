@@ -63,24 +63,50 @@ app.add_middleware(
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
-# Root endpoint
-@app.get("/")
-async def root():
+# API Root endpoint - provides API information
+@app.get(f"{settings.API_V1_STR}/")
+async def api_root():
     return JSONResponse(
         content={
             "message": "Welcome to the Uru Chatbot API",
+            "version": "1.0.0",
             "docs_url": "/docs",
-            "health_check": "/health"
+            "health_check": f"{settings.API_V1_STR}/health",
+            "openapi_url": f"{settings.API_V1_STR}/openapi.json"
         }
     )
 
-# Health check endpoint
-@app.get("/health")
+# Health check endpoint under API
+@app.get(f"{settings.API_V1_STR}/health")
 async def health_check():
+    from datetime import datetime
     return JSONResponse(
         content={
             "status": "healthy",
-            "version": "1.0.0"
+            "version": "1.0.0",
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        }
+    )
+
+# Legacy root endpoint for backwards compatibility
+@app.get("/")
+async def legacy_root():
+    return JSONResponse(
+        content={
+            "message": "Uru Chatbot API - Please use /api/ for API endpoints",
+            "api_root": f"{settings.API_V1_STR}/",
+            "docs_url": "/docs"
+        }
+    )
+
+# Legacy health endpoint for backwards compatibility
+@app.get("/health")
+async def legacy_health_check():
+    return JSONResponse(
+        content={
+            "status": "healthy",
+            "version": "1.0.0",
+            "note": "Please use /api/health for the standard health endpoint"
         }
     )
 
