@@ -1,47 +1,42 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Boolean, Float, Text
-from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
-from app.db.base import Base
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from datetime import datetime
+from typing import Optional, List
 
-class Conversation(Base):
-    """Enhanced conversation metadata model."""
+from app.db.base import Base, TimestampMixin
+
+
+class Conversation(Base, TimestampMixin):
+    """Conversation model for organizing chat sessions and tracking conversation metadata."""
 
     __tablename__ = "conversations"
 
-    id = Column(Integer, primary_key=True, index=True)
-    title = Column(String(255), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    model = Column(String(100), nullable=False)
-    system_prompt = Column(Text, nullable=True)  # Custom system prompt
-    is_archived = Column(Boolean, default=False)
-    is_pinned = Column(Boolean, default=False)
-    message_count = Column(Integer, default=0)
-    total_tokens = Column(Integer, default=0)
-    estimated_cost = Column(Float, default=0.0)  # USD cost estimation
-    last_message_at = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    # Primary key
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+
+    # Foreign key to user
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+
+    # Conversation metadata
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    ai_model: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., "gpt-4o", "o1-preview"
+    system_prompt: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    # Organization flags
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_pinned: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+    # Activity tracking
+    last_message_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    user = relationship("User", back_populates="conversations")
-    messages = relationship("Message", back_populates="conversation", cascade="all, delete-orphan", order_by="Message.created_at")
+    user: Mapped["User"] = relationship("User", back_populates="conversations")
+    messages: Mapped[List["Message"]] = relationship(
+        "Message",
+        back_populates="conversation",
+        cascade="all, delete-orphan",
+        order_by="Message.created_at"
+    )
 
-    @property
-    def display_title(self) -> str:
-        """Get display title, fallback to auto-generated if empty."""
-        if self.title and self.title.strip():
-            return self.title
-        return f"Conversation {self.id}"
-
-    @property
-    def is_empty(self) -> bool:
-        """Check if conversation has no messages."""
-        return self.message_count == 0
-
-    def update_stats(self, token_count: int = 0, cost: float = 0.0):
-        """Update conversation statistics."""
-        self.message_count += 1
-        self.total_tokens += token_count
-        self.estimated_cost += cost
-        self.last_message_at = func.now()
-        self.updated_at = func.now()
+    def __repr__(self) -> str:
+        return f"<Conversation(id={self.id}, title='{self.title}', user_id={self.user_id})>"

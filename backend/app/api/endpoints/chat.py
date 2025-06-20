@@ -27,11 +27,11 @@ async def send_message(
 ):
     """Send a message and get streaming response."""
     try:
-        # Validate user permissions
-        if not current_user.can_create_conversations:
+        # Validate user is active (removed phantom field reference)
+        if not current_user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permissions to send messages"
+                detail="User account is not active"
             )
 
         # Get conversation
@@ -71,9 +71,8 @@ async def send_message(
         message_repo = MessageRepository(db)
         user_message = await message_repo.create(
             conversation_id=conversation.id,
-            role="user",
-            content=request.message,
-            token_count=len(request.message.split()) * 1.3  # Rough token estimate
+            sender="user",
+            content=request.message
         )
 
         # Prepare message history for context
@@ -99,7 +98,7 @@ async def send_message(
             try:
                 async for content, metadata in adapter.generate_stream(
                     messages=messages,
-                    model=request.model or conversation.model,
+                    ai_model=request.ai_model or conversation.ai_model,
                     api_key=request.api_key,
                     temperature=request.temperature,
                     max_tokens=request.max_tokens
@@ -112,35 +111,29 @@ async def send_message(
                         # Create assistant message
                         assistant_message = await message_repo.create(
                             conversation_id=conversation.id,
-                            role="assistant",
+                            sender="ai",
                             content=metadata["full_content"],
-                            token_count=metadata["total_tokens"],
-                            ai_model=metadata["model_used"],
-                            cost_estimate=metadata["cost_estimate"],
-                            processing_time=metadata["processing_time"]
+                            ai_model=metadata["model_used"]
                         )
 
-                        # Update conversation stats
+                        # Update conversation's last message timestamp
                         stats = await message_repo.get_conversation_stats(conversation.id)
-                        await conversation_repo.update_stats(
-                            conversation.id,
-                            message_count=stats["message_count"],
-                            total_tokens=stats["total_tokens"],
-                            estimated_cost=stats["total_cost"],
-                            last_message_at=stats["last_message_at"]
-                        )
+                        if stats["last_message_at"]:
+                            await conversation_repo.update_last_message_time(
+                                conversation.id,
+                                last_message_at=stats["last_message_at"]
+                            )
 
-                        yield f"data: {json.dumps({'type': 'complete', 'message_id': assistant_message.id, 'cost': metadata['cost_estimate']})}\n\n"
+                        yield f"data: {json.dumps({'type': 'complete', 'message_id': assistant_message.id})}\n\n"
 
                     elif metadata["type"] == "error":
                         # Create error message
                         await message_repo.create(
                             conversation_id=conversation.id,
-                            role="assistant",
+                            sender="ai",
                             content=f"Error: {metadata['error']}",
                             is_error=True,
-                            error_type="api_error",
-                            processing_time=metadata.get("processing_time", 0)
+                            error_details={"error_type": "api_error", "error": metadata['error']}
                         )
 
                         yield f"data: {json.dumps({'type': 'error', 'error': metadata['error']})}\n\n"

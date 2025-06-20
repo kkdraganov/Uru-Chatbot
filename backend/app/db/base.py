@@ -1,6 +1,9 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.pool import AsyncAdaptedQueuePool
+from sqlalchemy import DateTime, func
+from datetime import datetime
+from typing import AsyncGenerator
 import logging
 
 from app.core.config import settings
@@ -33,10 +36,28 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False
 )
 
-# Create declarative base for models
-Base = declarative_base()
+# Create declarative base for models using SQLAlchemy 2.0 syntax
+class Base(DeclarativeBase):
+    """Base class for all SQLAlchemy models."""
+    pass
 
-async def get_db() -> AsyncSession:
+
+class TimestampMixin:
+    """Mixin class for common timestamp fields."""
+
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+        nullable=False
+    )
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     """Dependency for getting async DB session."""
     async with AsyncSessionLocal() as session:
         try:

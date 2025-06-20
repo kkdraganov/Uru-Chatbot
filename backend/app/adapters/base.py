@@ -8,7 +8,7 @@ class ModelAdapter(ABC):
     async def generate_stream(
         self,
         messages: List[Dict[str, str]],
-        model: str,
+        ai_model: str,
         api_key: str,
         **kwargs
     ) -> AsyncIterator[Tuple[str, Dict[str, Any]]]:
@@ -26,11 +26,11 @@ class ModelAdapter(ABC):
         pass
 
     @abstractmethod
-    def calculate_cost(self, model: str, total_tokens: int, completion_tokens: int) -> float:
+    def calculate_cost(self, ai_model: str, total_tokens: int, completion_tokens: int) -> float:
         """Calculate cost estimate for the API call."""
         pass
 
     @abstractmethod
-    def get_model_info(self, model: str) -> Dict[str, Any]:
+    def get_model_info(self, ai_model: str) -> Dict[str, Any]:
         """Get detailed information about a specific model."""
         pass

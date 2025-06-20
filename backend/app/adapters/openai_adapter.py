@@ -25,7 +25,7 @@ class OpenAIAdapter(ModelAdapter):
     async def generate_stream(
         self,
         messages: List[Dict[str, str]],
-        model: str,
+        ai_model: str,
         api_key: str,
         **kwargs
     ) -> AsyncIterator[Tuple[str, Dict[str, Any]]]:
@@ -37,7 +37,7 @@ class OpenAIAdapter(ModelAdapter):
 
         try:
             stream = await client.chat.completions.create(
-                model=model,
+                model=ai_model,
                 messages=messages,
                 stream=True,
                 stream_options={"include_usage": True},
@@ -58,7 +58,7 @@ class OpenAIAdapter(ModelAdapter):
 
             # Calculate final metadata
             processing_time = time.time() - start_time
-            cost = self.calculate_cost(model, total_tokens, completion_tokens)
+            cost = self.calculate_cost(ai_model, total_tokens, completion_tokens)
 
             final_metadata = {
                 "type": "complete",
@@ -66,7 +66,7 @@ class OpenAIAdapter(ModelAdapter):
                 "completion_tokens": completion_tokens,
                 "processing_time": processing_time,
                 "cost_estimate": cost,
-                "model_used": model,
+                "model_used": ai_model,
                 "full_content": "".join(content_chunks)
             }
 
@@ -77,7 +77,7 @@ class OpenAIAdapter(ModelAdapter):
                 "type": "error",
                 "error": str(e),
                 "processing_time": time.time() - start_time,
-                "model_used": model
+                "model_used": ai_model
             }
             yield f"Error: {str(e)}", error_metadata
 
@@ -109,12 +109,12 @@ class OpenAIAdapter(ModelAdapter):
                 "error": str(e)
             }
 
-    def calculate_cost(self, model: str, total_tokens: int, completion_tokens: int) -> float:
+    def calculate_cost(self, ai_model: str, total_tokens: int, completion_tokens: int) -> float:
         """Calculate cost estimate for the API call."""
-        if model not in self.model_pricing:
+        if ai_model not in self.model_pricing:
             return 0.0
 
-        pricing = self.model_pricing[model]
+        pricing = self.model_pricing[ai_model]
         input_tokens = total_tokens - completion_tokens
 
         input_cost = (input_tokens / 1000) * pricing["input"]
@@ -126,7 +126,7 @@ class OpenAIAdapter(ModelAdapter):
         """Return list of available models for OpenAI."""
         return self.available_models
 
-    def get_model_info(self, model: str) -> Dict[str, Any]:
+    def get_model_info(self, ai_model: str) -> Dict[str, Any]:
         """Get detailed information about a specific model."""
         model_info = {
             "gpt-4o": {
@@ -155,17 +155,17 @@ class OpenAIAdapter(ModelAdapter):
             }
         }
 
-        info = model_info.get(model, {
-            "name": model,
+        info = model_info.get(ai_model, {
+            "name": ai_model,
             "description": "OpenAI model",
             "context_length": 4096,
             "supports_streaming": True
         })
 
-        if model in self.model_pricing:
+        if ai_model in self.model_pricing:
             info.update({
-                "input_cost_per_token": self.model_pricing[model]["input"] / 1000,
-                "output_cost_per_token": self.model_pricing[model]["output"] / 1000
+                "input_cost_per_token": self.model_pricing[ai_model]["input"] / 1000,
+                "output_cost_per_token": self.model_pricing[ai_model]["output"] / 1000
             })
 
         return info

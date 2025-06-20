@@ -1,23 +1,14 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, validator
-from typing import Optional, List
+from typing import Optional, Dict, Any, List
 from datetime import datetime
-from enum import Enum
-
-class UserRole(str, Enum):
-    """User role enumeration."""
-    ADMIN = "admin"
-    USER = "user"
-    VIEWER = "viewer"
 
 class UserBase(BaseModel):
-    """Base user schema."""
+    """Base user schema matching DATABASE_OVERVIEW.md specification."""
     email: EmailStr
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    role: UserRole = UserRole.USER
+    name: str = Field(..., min_length=1, max_length=255)
 
 class UserCreate(UserBase):
-    """Enhanced user creation schema."""
+    """User creation schema."""
     password: str = Field(..., min_length=8, max_length=100)
 
     @validator('password')
@@ -33,33 +24,31 @@ class UserCreate(UserBase):
         return v
 
 class UserUpdate(BaseModel):
-    """Enhanced user update schema."""
+    """User update schema."""
     email: Optional[EmailStr] = None
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    role: Optional[UserRole] = None
+    name: Optional[str] = Field(None, min_length=1, max_length=255)
     is_active: Optional[bool] = None
+    preferences: Optional[Dict[str, Any]] = None
     password: Optional[str] = Field(None, min_length=8)
 
 class UserInDBBase(UserBase):
     """Base schema for User in DB."""
     id: int
     is_active: bool
-    is_verified: bool
+    preferences: Optional[Dict[str, Any]] = None
     last_login: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
-    full_name: str
 
     model_config = ConfigDict(from_attributes=True)
 
 class User(UserInDBBase):
-    """Enhanced user schema for API responses."""
+    """User schema for API responses."""
     pass
 
 class UserInDB(UserInDBBase):
     """User schema with password hash."""
-    hashed_password: str
+    password_hash: str
 
 class UserLogin(BaseModel):
     """Schema for user login."""

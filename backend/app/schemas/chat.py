@@ -1,43 +1,12 @@
-from pydantic import BaseModel, Field, validator, ConfigDict
+from pydantic import BaseModel, Field, validator
 from typing import Optional, List, Dict, Any
-from datetime import datetime
-from enum import Enum
-
-class MessageRole(str, Enum):
-    """Message role enumeration."""
-    USER = "user"
-    ASSISTANT = "assistant"
-    SYSTEM = "system"
-
-class MessageBase(BaseModel):
-    """Base message schema."""
-    role: MessageRole
-    content: str
-
-class MessageCreate(MessageBase):
-    """Schema for creating a message."""
-    pass
-
-class MessageResponse(MessageBase):
-    """Schema for message response."""
-    id: int
-    conversation_id: int
-    token_count: int
-    ai_model: Optional[str] = None
-    cost_estimate: float = 0.0
-    processing_time: Optional[float] = None
-    is_error: bool = False
-    error_type: Optional[str] = None
-    created_at: datetime
-
-    model_config = ConfigDict(from_attributes=True, protected_namespaces=())
 
 class ChatRequest(BaseModel):
     """Enhanced chat request schema."""
     conversation_id: int
     message: str
     api_key: str
-    model: Optional[str] = "gpt-4o"
+    ai_model: Optional[str] = "gpt-4o"
     system_prompt: Optional[str] = None
     temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: Optional[int] = Field(default=None, gt=0, le=4096)

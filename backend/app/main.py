@@ -6,6 +6,7 @@ import logging
 
 from app.api.router import api_router
 from app.core.config import settings
+
 # Import models to ensure they are registered
 from app.models import User, Conversation, Message
 
