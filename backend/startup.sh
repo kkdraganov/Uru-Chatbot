@@ -9,7 +9,7 @@ echo "Database is ready!"
 
 # Run database migrations
 echo "Running database migrations..."
-alembic upgrade head
+cd database && alembic upgrade head && cd ..
 
 # Start the application
 echo "Starting FastAPI application..."

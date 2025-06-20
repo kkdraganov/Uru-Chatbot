@@ -4,6 +4,11 @@
 **/.pnp.js
 
 # Testing
+**/test_*.py
+**/tests/
+**/*_test.py
+**/*_tests.py
+**/*_OUTDATED.py
 **/coverage/
 **/.nyc_output
 
