@@ -13,8 +13,8 @@ class UserRepository:
         self.session = session
     
     async def get_by_email(self, email: str) -> Optional[User]:
-        """Get user by email."""
-        query = select(User).where(User.email == email)
+        """Get user by email (case-insensitive)."""
+        query = select(User).where(func.lower(User.email) == func.lower(email))
         result = await self.session.execute(query)
         return result.scalars().first()
     
@@ -29,22 +29,20 @@ class UserRepository:
         if isinstance(data, dict):
             # Handle dict input
             user = User(
-                email=data["email"],
-                hashed_password=data["hashed_password"],
-                first_name=data.get("first_name"),
-                last_name=data.get("last_name"),
+                email=data["email"].lower(),  # Store email in lowercase for consistency
+                password_hash=data["password_hash"],
+                name=data.get("name", ""),
                 is_active=data.get("is_active", True),
-                role=data.get("role", "user")
+                preferences=data.get("preferences")
             )
         else:
             # Handle UserCreate schema
             user = User(
-                email=data.email,
-                hashed_password=get_password_hash(data.password),
-                first_name=data.first_name,
-                last_name=data.last_name,
+                email=data.email.lower(),  # Store email in lowercase for consistency
+                password_hash=get_password_hash(data.password),
+                name=data.name,
                 is_active=True,
-                role=data.role or "user"
+                preferences=None
             )
         self.session.add(user)
         await self.session.commit()
@@ -58,11 +56,15 @@ class UserRepository:
             return None
         
         update_data = data.model_dump(exclude_unset=True)
-        
+
         # Hash password if provided
         if "password" in update_data:
-            update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
-        
+            update_data["password_hash"] = get_password_hash(update_data.pop("password"))
+
+        # Ensure email is stored in lowercase for consistency
+        if "email" in update_data:
+            update_data["email"] = update_data["email"].lower()
+
         for key, value in update_data.items():
             setattr(user, key, value)
         
@@ -75,7 +77,7 @@ class UserRepository:
         user = await self.get_by_email(email)
         if not user:
             return None
-        if not verify_password(password, user.hashed_password):
+        if not verify_password(password, user.password_hash):
             return None
         return user
 
@@ -85,7 +87,7 @@ class UserRepository:
         if not user:
             return None
 
-        user.last_login = func.now()
+        user.last_login = datetime.now()
         await self.session.commit()
         await self.session.refresh(user)
         return user

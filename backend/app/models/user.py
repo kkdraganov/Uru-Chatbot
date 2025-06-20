@@ -1,50 +1,45 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Text
-from sqlalchemy.sql import func
-from sqlalchemy.orm import relationship
-from app.db.base import Base
+from sqlalchemy import String, Boolean, DateTime, JSON, Index, func
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+from datetime import datetime
+from typing import Optional, Dict, Any, List
 
-class User(Base):
-    """Enhanced user model with full profile support."""
+from app.db.base import Base, TimestampMixin
+
+
+class User(Base, TimestampMixin):
+    """User model for simple email/password authentication with SSO migration readiness."""
 
     __tablename__ = "users"
+    __table_args__ = (
+        Index('ix_users_email_lower', func.lower('email'), unique=True),
+    )
 
-    id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    hashed_password = Column(String(255), nullable=False)
-    first_name = Column(String(100), nullable=True)
-    last_name = Column(String(100), nullable=True)
-    is_active = Column(Boolean, default=True)
-    is_verified = Column(Boolean, default=False)
-    role = Column(String(50), default="user")  # admin, user, viewer
-    last_login = Column(DateTime(timezone=True), nullable=True)
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+    # Primary key
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+
+    # Authentication fields
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    # Profile fields
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    # Account status
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+
+    # User preferences (JSON field for UI preferences, default model, theme, etc.)
+    preferences: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON, nullable=True)
+
+    # Activity tracking
+    last_login: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
 
     # Relationships
-    conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
+    conversations: Mapped[List["Conversation"]] = relationship(
+        "Conversation",
+        back_populates="user",
+        cascade="all, delete-orphan",
+        order_by="Conversation.created_at.desc()"
+    )
 
-    @property
-    def full_name(self) -> str:
-        """Get user's full name."""
-        if self.first_name and self.last_name:
-            return f"{self.first_name} {self.last_name}"
-        elif self.first_name:
-            return self.first_name
-        elif self.last_name:
-            return self.last_name
-        return self.email.split("@")[0]
-
-    @property
-    def is_admin(self) -> bool:
-        """Check if user has admin role."""
-        return self.role == "admin"
-
-    @property
-    def can_create_conversations(self) -> bool:
-        """Check if user can create conversations."""
-        return self.role in ["admin", "user"]
-
-    @property
-    def can_view_conversations(self) -> bool:
-        """Check if user can view conversations."""
-        return self.role in ["admin", "user", "viewer"]
+    def __repr__(self) -> str:
+        return f"<User(id={self.id}, email='{self.email}', name='{self.name}')>"

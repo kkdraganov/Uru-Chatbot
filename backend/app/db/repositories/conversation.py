@@ -16,7 +16,7 @@ class ConversationRepository:
         conversation = Conversation(
             title=data.title,
             user_id=user_id,
-            model=data.model,
+            ai_model=data.ai_model,
             system_prompt=data.system_prompt
         )
         self.session.add(conversation)
@@ -69,24 +69,18 @@ class ConversationRepository:
         await self.session.commit()
         return True
 
-    async def update_stats(
+    async def update_last_message_time(
         self,
         conversation_id: int,
-        message_count: int,
-        total_tokens: int,
-        estimated_cost: float,
         last_message_at: datetime
     ) -> Optional[Conversation]:
-        """Update conversation statistics."""
+        """Update conversation's last message timestamp."""
         conversation = await self.get_by_id_admin(conversation_id)
         if not conversation:
             return None
 
-        conversation.message_count = message_count
-        conversation.total_tokens = total_tokens
-        conversation.estimated_cost = estimated_cost
         conversation.last_message_at = last_message_at
-        conversation.updated_at = func.now()
+        conversation.updated_at = datetime.now()
 
         await self.session.commit()
         await self.session.refresh(conversation)
@@ -107,8 +101,8 @@ class ConversationRepository:
         if search_params.query:
             query = query.where(Conversation.title.ilike(f"%{search_params.query}%"))
 
-        if search_params.model:
-            query = query.where(Conversation.model == search_params.model)
+        if search_params.ai_model:
+            query = query.where(Conversation.ai_model == search_params.ai_model)
 
         if search_params.is_archived is not None:
             query = query.where(Conversation.is_archived == search_params.is_archived)
@@ -122,11 +116,8 @@ class ConversationRepository:
         if search_params.date_to:
             query = query.where(Conversation.created_at <= search_params.date_to)
 
-        if search_params.min_messages:
-            query = query.where(Conversation.message_count >= search_params.min_messages)
-
-        if search_params.max_messages:
-            query = query.where(Conversation.message_count <= search_params.max_messages)
+        # Note: message_count filtering removed as this field doesn't exist in the database schema
+        # If needed, this would require a subquery to count messages from the messages table
 
         # Get total count
         count_query = select(func.count()).select_from(query.subquery())

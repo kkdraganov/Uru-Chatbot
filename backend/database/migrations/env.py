@@ -17,9 +17,14 @@ if config.config_file_name is not None:
 
 # add your model's MetaData object here
 # for 'autogenerate' support
-# from myapp import mymodel
-# target_metadata = mymodel.Base.metadata
+import sys
+import os
+# Add the parent directory (backend) to the Python path
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+
 from app.db.base import Base
+# Import all models to ensure they are registered with SQLAlchemy
+from app.models import User, Conversation, Message
 
 target_metadata = Base.metadata
 
@@ -72,8 +77,14 @@ def run_migrations_online() -> None:
 
     # Update config with environment database URL if available
     configuration = config.get_section(config.config_ini_section, {})
+    if not configuration:
+        configuration = {}
+
     if database_url:
         configuration["sqlalchemy.url"] = database_url
+    elif "sqlalchemy.url" not in configuration:
+        # Fallback URL for development
+        configuration["sqlalchemy.url"] = "postgresql://postgres:postgres@localhost/uru_chatbot"
 
     connectable = engine_from_config(
         configuration,

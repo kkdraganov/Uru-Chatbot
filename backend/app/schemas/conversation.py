@@ -1,44 +1,39 @@
 from pydantic import BaseModel, Field, ConfigDict, validator
-from typing import Optional, List, Dict
+from typing import Optional, List
 from datetime import datetime
 
 class ConversationBase(BaseModel):
-    """Enhanced base conversation schema."""
+    """Base conversation schema matching DATABASE_OVERVIEW.md specification."""
     title: str = Field(..., min_length=1, max_length=255)
-    model: str
+    ai_model: str = Field(..., min_length=1, max_length=100)
     system_prompt: Optional[str] = None
 
 class ConversationCreate(ConversationBase):
-    """Enhanced conversation creation schema."""
+    """Conversation creation schema."""
     pass
 
 class ConversationUpdate(BaseModel):
-    """Enhanced conversation update schema."""
+    """Conversation update schema."""
     title: Optional[str] = Field(None, min_length=1, max_length=255)
-    model: Optional[str] = None
+    ai_model: Optional[str] = Field(None, min_length=1, max_length=100)
     system_prompt: Optional[str] = None
     is_archived: Optional[bool] = None
     is_pinned: Optional[bool] = None
 
 class ConversationInDBBase(ConversationBase):
-    """Enhanced base schema for Conversation in DB."""
+    """Base schema for Conversation in DB."""
     id: int
     user_id: int
     is_archived: bool = False
     is_pinned: bool = False
-    message_count: int = 0
-    total_tokens: int = 0
-    estimated_cost: float = 0.0
     last_message_at: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
-    display_title: str
-    is_empty: bool
 
     model_config = ConfigDict(from_attributes=True)
 
 class Conversation(ConversationInDBBase):
-    """Enhanced conversation schema for API responses."""
+    """Conversation schema for API responses."""
     pass
 
 class ConversationListResponse(BaseModel):
@@ -52,7 +47,7 @@ class ConversationListResponse(BaseModel):
 class ConversationSearch(BaseModel):
     """Schema for conversation search."""
     query: Optional[str] = None
-    model: Optional[str] = None
+    ai_model: Optional[str] = None
     is_archived: Optional[bool] = None
     is_pinned: Optional[bool] = None
     date_from: Optional[datetime] = None
@@ -64,7 +59,8 @@ class ConversationSearch(BaseModel):
 
     @validator('sort_by')
     def validate_sort_by(cls, v):
-        allowed_fields = ['created_at', 'updated_at', 'title', 'message_count', 'total_tokens']
+        # Only allow fields that actually exist in the database schema
+        allowed_fields = ['created_at', 'updated_at', 'title', 'last_message_at']
         if v not in allowed_fields:
             raise ValueError(f'sort_by must be one of: {", ".join(allowed_fields)}')
         return v
