@@ -190,13 +190,16 @@ async def azure_login(
         user = await user_repo.get_by_email(email)
 
         if not user:
-            # Create user with Azure data
-            user_data = UserCreate(
-                email=email,
-                password=get_password_hash(os.urandom(24).hex()),
-                first_name=graph_data.get("givenName", ""),
-                last_name=graph_data.get("surname", "")
-            )
+            # Create user with Azure data using dict approach
+            user_data = {
+                "email": email,
+                "hashed_password": get_password_hash(os.urandom(24).hex()),
+                "first_name": graph_data.get("givenName", ""),
+                "last_name": graph_data.get("surname", ""),
+                "is_active": True,
+                "is_verified": True,
+                "role": None
+            }
             user = await user_repo.create(user_data)
 
         # Update last login

@@ -24,7 +24,7 @@ class Message(Base):
     content_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)  # SHA-256 hash for deduplication
 
     # AI-specific fields
-    ai_model: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # AI model that generated response (for AI messages)
+    model: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # AI model that generated response (for AI messages)
 
     # Error handling
     is_error: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

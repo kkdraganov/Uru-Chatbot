@@ -15,6 +15,20 @@ interface User {
   updated_at: string;
 }
 
+// Utility function to convert Azure external user email format to original email
+const getDisplayEmail = (email: string): string => {
+  if (email.includes('#EXT#@')) {
+    // Convert Azure external user format back to original email
+    // alan_uruenterprises.com#EXT#@alanuruenterprises.onmicrosoft.com -> alan@uruenterprises.com
+    const parts = email.split('#EXT#@');
+    if (parts.length === 2) {
+      const originalEmail = parts[0].replace('_', '@'); // Replace first underscore with @
+      return originalEmail;
+    }
+  }
+  return email;
+};
+
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -29,6 +43,7 @@ interface AuthContextType {
   validateApiKey: (apiKey: string) => Promise<{ valid: boolean; error?: string; models?: string[] }>;
   refreshUser: () => Promise<void>;
   azureLogin: (code: string) => Promise<boolean>;
+  getDisplayEmail: (email: string) => string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -217,6 +232,7 @@ const azureLogin = useCallback(async (code: string): Promise<boolean> => {
     validateApiKey,
     refreshUser,
     azureLogin,
+    getDisplayEmail,
   };
 
   return (

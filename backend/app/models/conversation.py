@@ -19,7 +19,7 @@ class Conversation(Base, TimestampMixin):
 
     # Conversation metadata
     title: Mapped[str] = mapped_column(String(255), nullable=False)
-    ai_model: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., "gpt-4o", "o1-preview"
+    model: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., "gpt-4o", "o1-preview"
     system_prompt: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Organization flags

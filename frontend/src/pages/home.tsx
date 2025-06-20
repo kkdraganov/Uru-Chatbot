@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/layout/Layout';
 
 const HomePage: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, getDisplayEmail } = useAuth();
   
   return (
     <Layout>
@@ -21,7 +21,7 @@ const HomePage: React.FC = () => {
           {user && (
             <div className="mb-6 p-4 bg-blue-50 rounded-lg">
               <p className="text-blue-800">
-                Welcome back, {user.full_name || user.email}! 
+                Welcome back, {user.full_name || getDisplayEmail(user.email)}!
                 {user.role === 'admin' && ' (Administrator)'}
               </p>
             </div>

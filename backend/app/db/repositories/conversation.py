@@ -16,7 +16,7 @@ class ConversationRepository:
         conversation = Conversation(
             title=data.title,
             user_id=user_id,
-            ai_model=data.ai_model,
+            model=data.model,
             system_prompt=data.system_prompt
         )
         self.session.add(conversation)

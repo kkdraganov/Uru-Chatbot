@@ -1,15 +1,17 @@
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, validator
-from typing import Optional, Dict, Any, List
+from typing import Optional, List
 from datetime import datetime
 
 class UserBase(BaseModel):
-    """Base user schema matching DATABASE_OVERVIEW.md specification."""
+    """Base user schema matching actual database structure."""
     email: EmailStr
-    name: str = Field(..., min_length=1, max_length=255)
+    first_name: Optional[str] = Field(None, max_length=100)
+    last_name: Optional[str] = Field(None, max_length=100)
 
 class UserCreate(UserBase):
     """User creation schema."""
     password: str = Field(..., min_length=8, max_length=100)
+    role: Optional[str] = Field(default="user")
 
     @validator('password')
     def validate_password(cls, v):
@@ -26,16 +28,19 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     """User update schema."""
     email: Optional[EmailStr] = None
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
+    first_name: Optional[str] = Field(None, max_length=100)
+    last_name: Optional[str] = Field(None, max_length=100)
     is_active: Optional[bool] = None
-    preferences: Optional[Dict[str, Any]] = None
+    role: Optional[str] = Field(None, max_length=50)
+    is_verified: Optional[bool] = None
     password: Optional[str] = Field(None, min_length=8)
 
 class UserInDBBase(UserBase):
     """Base schema for User in DB."""
     id: int
-    is_active: bool
-    preferences: Optional[Dict[str, Any]] = None
+    is_active: Optional[bool] = None
+    role: Optional[str] = None
+    is_verified: Optional[bool] = None
     last_login: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -48,7 +53,7 @@ class User(UserInDBBase):
 
 class UserInDB(UserInDBBase):
     """User schema with password hash."""
-    password_hash: str
+    hashed_password: str
 
 class UserLogin(BaseModel):
     """Schema for user login."""

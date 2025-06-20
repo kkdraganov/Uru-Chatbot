@@ -22,7 +22,7 @@ const Header: React.FC<HeaderProps> = ({
   onOpenSettings, 
   sidebarOpen 
 }) => {
-  const { user, logout } = useAuth();
+  const { user, logout, getDisplayEmail } = useAuth();
   const { currentConversation, changeModel } = useChat();
 
   const handleLogout = async () => {
@@ -80,7 +80,7 @@ const Header: React.FC<HeaderProps> = ({
             <Menu.Button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
               <UserCircleIcon className="h-6 w-6 text-gray-600 dark:text-gray-400" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:block">
-                {user?.full_name || user?.email}
+                {user?.full_name || getDisplayEmail(user?.email || '')}
               </span>
             </Menu.Button>
 
@@ -100,7 +100,7 @@ const Header: React.FC<HeaderProps> = ({
                       {user?.full_name || 'User'}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {user?.email}
+                      {getDisplayEmail(user?.email || '')}
                     </p>
                     <p className="text-xs text-gray-400 dark:text-gray-500 capitalize">
                       {user?.role}
