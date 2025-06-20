@@ -123,6 +123,12 @@ class Settings(BaseSettings):
         "gpt-3.5-turbo"
     ]
 
+    # Azure Entra configuration
+    AZURE_CLIENT_ID: str = os.getenv("AZURE_CLIENT_ID", "")
+    AZURE_TENANT_ID: str = os.getenv("AZURE_TENANT_ID", "")
+    AZURE_CLIENT_SECRET: str = os.getenv("AZURE_CLIENT_SECRET", "")
+    AZURE_REDIRECT_URI: str = os.getenv("AZURE_REDIRECT_URI", "http://localhost:3000/authorize")
+
     # Rate limiting settings
     RATE_LIMIT_PER_MINUTE: int = 60
     RATE_LIMIT_PER_HOUR: int = 1000

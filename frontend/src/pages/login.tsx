@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import Layout from '../components/layout/Layout';
+import { AzureLoginButton } from '../components/AzureLoginButton';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -70,6 +71,16 @@ const LoginPage: React.FC = () => {
           
           <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
             <div className="space-y-4">
+              <AzureLoginButton />
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t"></span>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500">Or continue with email:</span>
+                </div>
+              </div>
               <div>
                 <label htmlFor="email-address" className="block text-sm font-medium text-gray-700">
                   Email address

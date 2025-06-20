@@ -250,5 +250,11 @@ export const api = {
   delete: async (url: string) => {
     const response = await apiClient.delete(url);
     return response;
-  }
+  },
+  
+  // Add Azure login endpoint
+  azureLogin: async (code: string) => {
+    const response = await apiClient.post('/auth/azure-login', { code });
+    return response.data;
+  },
 };

@@ -28,6 +28,7 @@ interface AuthContextType {
   hasApiKey: () => boolean;
   validateApiKey: (apiKey: string) => Promise<{ valid: boolean; error?: string; models?: string[] }>;
   refreshUser: () => Promise<void>;
+  azureLogin: (code: string) => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -167,6 +168,35 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [isClient]);
 
+  // Azure login
+const azureLogin = useCallback(async (code: string): Promise<boolean> => {
+  if (!isClient) return false;
+
+  setIsLoading(true);
+  setError(null);
+
+  try {
+    const data = await api.azureLogin(code);
+
+    // Store token
+    localStorage.setItem('token', data.access_token);
+    if (data.refresh_token) {
+      localStorage.setItem('refresh_token', data.refresh_token);
+    }
+
+    // Get user data
+    await refreshUser();
+  
+    setIsAuthenticated(true);
+    setIsLoading(false);
+    return true;
+  } catch (err: any) {
+    setError(err.response?.data?.detail || 'Azure login failed');
+    setIsLoading(false);
+    return false;
+  }
+}, [isClient, refreshUser]);
+
   // Check if API key exists
   const hasApiKey = useCallback((): boolean => {
     if (!isClient) return false;
@@ -185,7 +215,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     getApiKey: getApiKeyFunc,
     hasApiKey,
     validateApiKey,
-    refreshUser
+    refreshUser,
+    azureLogin,
   };
 
   return (
