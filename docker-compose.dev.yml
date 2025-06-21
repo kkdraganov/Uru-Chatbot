@@ -12,6 +12,10 @@ services:
       - ENVIRONMENT=development
       - INSTANCE=dev
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+      # Azure SSO Configuration (Frontend)
+      - NEXT_PUBLIC_AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+      - NEXT_PUBLIC_AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+      - NEXT_PUBLIC_AZURE_REDIRECT_URI=${AZURE_REDIRECT_URI:-http://localhost:3000/authorize}
     depends_on:
       - backend
     networks:
@@ -33,6 +37,11 @@ services:
       - DATABASE_URL=postgresql+asyncpg://postgres:postgres@db:5432/uru_chatbot
       - CORS_ORIGINS=["http://localhost:3000","http://localhost:8000"]
       - ENVIRONMENT=development
+      # Azure SSO Configuration (Backend)
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET:-}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+      - AZURE_REDIRECT_URI=${AZURE_REDIRECT_URI:-http://localhost:3000/authorize}
     depends_on:
       - db
     networks:

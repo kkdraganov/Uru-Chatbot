@@ -25,6 +25,15 @@ environments:
     value: ["https://[INSTANCE].uruenterprises.com","https://api.[INSTANCE].uruenterprises.com"]
   - key: "ENVIRONMENT"
     value: "production"
+  # Azure SSO Configuration
+  - key: "AZURE_CLIENT_ID"
+    value: "[AZURE_CLIENT_ID]"
+  - key: "AZURE_CLIENT_SECRET"
+    value: "[AZURE_CLIENT_SECRET]"
+  - key: "AZURE_TENANT_ID"
+    value: "[AZURE_TENANT_ID]"
+  - key: "AZURE_REDIRECT_URI"
+    value: "https://[INSTANCE].uruenterprises.com/authorize"
 
 ports:
   - protocol: "HTTPS"

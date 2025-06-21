@@ -64,6 +64,10 @@ Professional AI chat interface with real-time streaming and secure API key manag
 | **DB_PASSWORD** | `postgres` | Database password
 | **DB_NAME** | `uru_chatbot` | Database name
 | **SECRET_KEY** | `development_secret_key` | JWT secret
+| **AZURE_CLIENT_ID** | *(required)* | Azure App Registration Client ID
+| **AZURE_CLIENT_SECRET** | *(required)* | Azure App Registration Client Secret
+| **AZURE_TENANT_ID** | *(required)* | Azure Tenant ID
+| **AZURE_REDIRECT_URI** | `https://${INSTANCE}.uruenterprises.com/authorize` | Azure OAuth redirect URI
 
 2. **Access**
    - Frontend: `https://${INSTANCE}.uruenterprises.com`

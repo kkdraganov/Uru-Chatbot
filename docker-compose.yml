@@ -13,6 +13,10 @@ services:
       - ENVIRONMENT=${ENVIRONMENT:-production}
       - INSTANCE=${INSTANCE:-dev}
       - NEXT_PUBLIC_API_URL=https://api.${INSTANCE}.uruenterprises.com/api
+      # Azure SSO Configuration (Frontend)
+      - NEXT_PUBLIC_AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+      - NEXT_PUBLIC_AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+      - NEXT_PUBLIC_AZURE_REDIRECT_URI=${AZURE_REDIRECT_URI:-https://${INSTANCE}.uruenterprises.com/authorize}
     depends_on:
       - backend
     restart: always
@@ -32,6 +36,11 @@ services:
       - CORS_ORIGINS=["https://${INSTANCE}.uruenterprises.com","https://api.${INSTANCE}.uruenterprises.com"]
       - SECRET_KEY=${SECRET_KEY:-development_secret_key}
       - MODEL_API_KEY=${MODEL_API_KEY:-your_openai_api_key}
+      # Azure SSO Configuration (Backend)
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET:-}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+      - AZURE_REDIRECT_URI=${AZURE_REDIRECT_URI:-https://${INSTANCE}.uruenterprises.com/authorize}
     depends_on:
       - db
     restart: always
