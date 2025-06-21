@@ -46,15 +46,15 @@ check_project_root() {
 # Install Python dependencies
 setup_python_env() {
     print_header "Setting up Python Environment"
-    
+
     # Check if Python is available
     if ! command -v python3 &> /dev/null; then
         print_error "Python 3 is not installed"
         exit 1
     fi
-    
+
     print_info "Python version: $(python3 --version)"
-    
+
     # Install backend development dependencies
     if [[ -f "backend/requirements-dev.txt" ]]; then
         print_info "Installing Python development dependencies..."
@@ -72,16 +72,16 @@ setup_python_env() {
 # Install Node.js dependencies
 setup_node_env() {
     print_header "Setting up Node.js Environment"
-    
+
     # Check if Node.js is available
     if ! command -v node &> /dev/null; then
         print_error "Node.js is not installed"
         exit 1
     fi
-    
+
     print_info "Node.js version: $(node --version)"
     print_info "npm version: $(npm --version)"
-    
+
     # Install frontend dependencies
     if [[ -f "frontend/package.json" ]]; then
         print_info "Installing Node.js dependencies..."
@@ -97,13 +97,13 @@ setup_node_env() {
 # Make scripts executable
 setup_scripts() {
     print_header "Setting up Scripts"
-    
+
     # Make validation scripts executable
     if [[ -f "scripts/validate_mcp_schemas.py" ]]; then
         chmod +x scripts/validate_mcp_schemas.py
         print_success "Made validate_mcp_schemas.py executable"
     fi
-    
+
     if [[ -f "scripts/validate_env_files.sh" ]]; then
         chmod +x scripts/validate_env_files.sh
         print_success "Made validate_env_files.sh executable"
@@ -113,15 +113,15 @@ setup_scripts() {
 # Install pre-commit hooks
 install_precommit() {
     print_header "Installing Pre-commit Hooks"
-    
+
     # Install pre-commit hooks
     print_info "Installing pre-commit hooks..."
     pre-commit install
     print_success "Pre-commit hooks installed"
-    
+
     # Install pre-commit hooks for commit-msg (if needed)
     pre-commit install --hook-type commit-msg || true
-    
+
     # Install pre-commit hooks for pre-push (if needed)
     pre-commit install --hook-type pre-push || true
 }
@@ -129,11 +129,11 @@ install_precommit() {
 # Validate pre-commit configuration
 validate_config() {
     print_header "Validating Pre-commit Configuration"
-    
+
     print_info "Validating .pre-commit-config.yaml..."
     pre-commit validate-config
     print_success "Pre-commit configuration is valid"
-    
+
     print_info "Validating manifest..."
     pre-commit validate-manifest || print_warning "Some hooks may not be available yet"
 }
@@ -141,9 +141,9 @@ validate_config() {
 # Run initial checks
 run_initial_checks() {
     print_header "Running Initial Quality Checks"
-    
+
     print_info "Running pre-commit on all files (this may take a while)..."
-    
+
     # Run pre-commit on all files, but don't fail if some hooks fail initially
     if pre-commit run --all-files; then
         print_success "All pre-commit hooks passed!"
@@ -156,21 +156,21 @@ run_initial_checks() {
 # Test specific hooks
 test_hooks() {
     print_header "Testing Individual Hooks"
-    
+
     # Test Python hooks if backend exists
     if [[ -d "backend" ]]; then
         print_info "Testing Python hooks..."
         pre-commit run ruff --all-files || print_warning "Ruff hook needs attention"
         pre-commit run ruff-format --all-files || print_warning "Ruff format hook needs attention"
     fi
-    
+
     # Test frontend hooks if frontend exists
     if [[ -d "frontend" ]]; then
         print_info "Testing frontend hooks..."
         pre-commit run eslint --all-files || print_warning "ESLint hook needs attention"
         pre-commit run prettier --all-files || print_warning "Prettier hook needs attention"
     fi
-    
+
     # Test custom hooks
     print_info "Testing custom validation hooks..."
     pre-commit run validate-mcp-schemas --all-files || print_warning "MCP validation needs attention"
@@ -180,7 +180,7 @@ test_hooks() {
 # Display usage information
 show_usage() {
     print_header "Pre-commit Setup Complete!"
-    
+
     echo "Pre-commit hooks are now installed and configured."
     echo ""
     echo "Available commands:"
@@ -198,7 +198,7 @@ show_usage() {
 # Main execution
 main() {
     print_header "Uru Chatbot Pre-commit Setup"
-    
+
     check_project_root
     setup_python_env
     setup_node_env
@@ -208,7 +208,7 @@ main() {
     run_initial_checks
     test_hooks
     show_usage
-    
+
     print_success "Pre-commit setup completed successfully!"
 }
 

@@ -32,67 +32,67 @@ print_success() {
 # Function to validate a single env file
 validate_env_file() {
     local file="$1"
-    
+
     if [[ ! -f "$file" ]]; then
         print_error "File $file does not exist"
         return
     fi
-    
+
     echo "Validating $file..."
-    
+
     # Check for common security issues
     while IFS= read -r line; do
         # Skip empty lines and comments
         [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
-        
+
         # Check for proper format (KEY=VALUE)
         if [[ ! "$line" =~ ^[A-Z_][A-Z0-9_]*= ]]; then
             print_warning "$file: Line '$line' doesn't follow KEY=VALUE format"
         fi
-        
+
         # Check for exposed secrets (basic patterns)
         if [[ "$line" =~ (password|secret|key|token).*=.*(password|secret|123|admin|root|test) ]]; then
             print_error "$file: Potential exposed secret in line: ${line%%=*}=***"
         fi
-        
+
         # Check for localhost in production files
         if [[ "$file" == *"production"* && "$line" =~ localhost ]]; then
             print_warning "$file: localhost found in production environment file"
         fi
-        
+
         # Check for empty values that should have values
         if [[ "$line" =~ ^(DATABASE_URL|SECRET_KEY|API_KEY|PASSWORD)=$ ]]; then
             print_warning "$file: Critical environment variable ${line%=} is empty"
         fi
-        
+
     done < "$file"
 }
 
 # Main validation logic
 main() {
     echo "🔍 Starting environment file validation..."
-    
+
     # Find all .env files
     env_files=()
     while IFS= read -r -d '' file; do
         env_files+=("$file")
     done < <(find . -name ".env*" -type f -not -path "./node_modules/*" -not -path "./.git/*" -print0)
-    
+
     if [[ ${#env_files[@]} -eq 0 ]]; then
         print_warning "No .env files found"
         exit 0
     fi
-    
+
     # Validate each file
     for file in "${env_files[@]}"; do
         validate_env_file "$file"
     done
-    
+
     # Check for required example files
     if [[ ! -f ".env.example" ]]; then
         print_warning "No .env.example file found - consider creating one for documentation"
     fi
-    
+
     # Summary
     echo ""
     if [[ $ERRORS -eq 0 && $WARNINGS -eq 0 ]]; then

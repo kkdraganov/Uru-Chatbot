@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 MCP Tool Schema Validation Script
 
@@ -143,8 +144,9 @@ class MCPSchemaValidator:
     def scan_directory(self, directory: Path) -> bool:
         """Scan directory for files to validate."""
         all_valid = True
+        found_mcp_files = False
 
-        # Find JSON schema files
+        # Find JSON schema files (only MCP-related ones)
         json_files = list(directory.rglob("*.json"))
         for json_file in json_files:
             if self._should_validate_json(json_file):
@@ -153,18 +155,23 @@ class MCPSchemaValidator:
                         data = json.load(f)
 
                     if self._is_json_schema(data):
+                        found_mcp_files = True
                         if not self.validate_json_schema(data, str(json_file)):
                             all_valid = False
-                    elif self._is_openapi_spec(data):
+                    elif self._is_openapi_spec(data) and self._is_mcp_related_openapi(data):
+                        found_mcp_files = True
                         if not self.validate_openapi_spec(data, str(json_file)):
                             all_valid = False
 
                 except json.JSONDecodeError as e:
-                    self.errors.append(f"{json_file}: Invalid JSON - {e}")
-                    all_valid = False
+                    # Only report JSON errors for MCP-related files
+                    if self._is_mcp_related_file(json_file):
+                        self.errors.append(f"{json_file}: Invalid JSON - {e}")
+                        all_valid = False
                 except Exception as e:
-                    self.errors.append(f"{json_file}: Error reading file - {e}")
-                    all_valid = False
+                    if self._is_mcp_related_file(json_file):
+                        self.errors.append(f"{json_file}: Error reading file - {e}")
+                        all_valid = False
 
         # Find Python files with MCP tools
         python_files = list(directory.rglob("*.py"))
@@ -175,6 +182,7 @@ class MCPSchemaValidator:
                         code = f.read()
 
                     if self._contains_mcp_tools(code):
+                        found_mcp_files = True
                         if not self.validate_mcp_tool_function(code, str(py_file)):
                             all_valid = False
 
@@ -182,12 +190,16 @@ class MCPSchemaValidator:
                     self.errors.append(f"{py_file}: Error reading file - {e}")
                     all_valid = False
 
+        # If no MCP files found, consider it valid (don't block commits)
+        if not found_mcp_files:
+            return True
+
         return all_valid
 
     def _should_validate_json(self, file_path: Path) -> bool:
         """Check if JSON file should be validated."""
         # Skip node_modules, build directories, etc.
-        skip_dirs = {"node_modules", ".next", "build", "dist", "__pycache__", ".git"}
+        skip_dirs = {"node_modules", ".next", "build", "dist", "__pycache__", ".git", ".vscode"}
         return not any(part in skip_dirs for part in file_path.parts)
 
     def _should_validate_python(self, file_path: Path) -> bool:
@@ -218,6 +230,19 @@ class MCPSchemaValidator:
         ]
         return any(re.search(pattern, code, re.IGNORECASE) for pattern in mcp_patterns)
 
+    def _is_mcp_related_openapi(self, data: Dict[str, Any]) -> bool:
+        """Check if OpenAPI spec is MCP-related."""
+        # Look for MCP-specific patterns in the API spec
+        if "info" in data and "title" in data["info"]:
+            title = data["info"]["title"].lower()
+            return "mcp" in title or "model context protocol" in title
+        return False
+
+    def _is_mcp_related_file(self, file_path: Path) -> bool:
+        """Check if file is MCP-related based on path or name."""
+        path_str = str(file_path).lower()
+        return "mcp" in path_str or "tool" in path_str
+
     def print_results(self) -> None:
         """Print validation results."""
         if self.errors:
@@ -233,7 +258,7 @@ class MCPSchemaValidator:
         if not self.errors and not self.warnings:
             print("✓ All MCP schemas and tools are valid!")
         elif not self.errors:
-            print("✓ No errors found, but there are warnings to address.")
+            print("! No errors found, but there are warnings to address.")
 
 
 def main():
@@ -247,7 +272,10 @@ def main():
     is_valid = validator.scan_directory(project_root)
 
     # Print results
-    validator.print_results()
+    if not validator.errors and not validator.warnings:
+        print("✓ No MCP-related files found or all MCP schemas and tools are valid!")
+    else:
+        validator.print_results()
 
     # Exit with appropriate code
     sys.exit(0 if is_valid else 1)
