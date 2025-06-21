@@ -27,6 +27,21 @@ class Settings(BaseSettings):
     # Instance name for domain configuration
     INSTANCE: str = os.getenv("INSTANCE", "dev")
 
+    # Azure Entra configuration
+    AZURE_CLIENT_ID: str = os.getenv("AZURE_CLIENT_ID", "")
+    AZURE_TENANT_ID: str = os.getenv("AZURE_TENANT_ID", "")
+    AZURE_CLIENT_SECRET: str = os.getenv("AZURE_CLIENT_SECRET", "")
+    AZURE_REDIRECT_URI: str = os.getenv("AZURE_REDIRECT_URI", "http://localhost:3000/authorize")
+
+    # Rate limiting settings
+    RATE_LIMIT_PER_MINUTE: int = 60
+    RATE_LIMIT_PER_HOUR: int = 1000
+
+    # Security settings
+    MAX_MESSAGE_LENGTH: int = 10000
+    MAX_CONVERSATION_HISTORY: int = 100
+    
+
     def __init__(self):
         super().__init__()
         # DEBUG: Log environment variables when settings are initialized (config.py:__init__)
@@ -35,6 +50,10 @@ class Settings(BaseSettings):
         logger.info(f"[CONFIG] Production mode: {self.is_production}")
         logger.info(f"[CONFIG] DATABASE_URL: {self.DATABASE_URL}")
         logger.info(f"[CONFIG] CORS_ORIGINS: {self.CORS_ORIGINS}")
+        logger.info(f"[CONFIG] AZURE_CLIENT_ID: {'***REDACTED***' if self.AZURE_CLIENT_ID != 'your_azure_client_id' else 'Not provided'}")
+        logger.info(f"[CONFIG] AZURE_TENANT_ID: {'***REDACTED***' if self.AZURE_TENANT_ID != 'your_azure_tenant_id' else 'Not provided'}")
+        logger.info(f"[CONFIG] AZURE_CLIENT_SECRET: {'***REDACTED***' if self.AZURE_CLIENT_SECRET != 'your_azure_client_secret' else 'Not provided'}")
+        logger.info(f"[CONFIG] AZURE_REDIRECT_URI: {self.AZURE_REDIRECT_URI}")
 
     # Auto-detect environment based on INSTANCE or explicit setting
     @property
@@ -123,20 +142,6 @@ class Settings(BaseSettings):
         "gpt-3.5-turbo"
     ]
 
-    # Azure Entra configuration
-    AZURE_CLIENT_ID: str = os.getenv("AZURE_CLIENT_ID", "")
-    AZURE_TENANT_ID: str = os.getenv("AZURE_TENANT_ID", "")
-    AZURE_CLIENT_SECRET: str = os.getenv("AZURE_CLIENT_SECRET", "")
-    AZURE_REDIRECT_URI: str = os.getenv("AZURE_REDIRECT_URI", "http://localhost:3000/authorize")
-
-    # Rate limiting settings
-    RATE_LIMIT_PER_MINUTE: int = 60
-    RATE_LIMIT_PER_HOUR: int = 1000
-
-    # Security settings
-    MAX_MESSAGE_LENGTH: int = 10000
-    MAX_CONVERSATION_HISTORY: int = 100
-    
     class Config:
         case_sensitive = True
 

@@ -5,21 +5,24 @@ WORKDIR /app
 # Install system dependencies for database operations
 RUN apt-get update && apt-get install -y \
     netcat-traditional \
+    dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Copy the rest of the application
+COPY . .
+
 # Set environment variables
 ENV PYTHONPATH=/app
 
-# Copy startup script
-COPY startup.sh .
-RUN chmod +x startup.sh
+# Convert line endings and make startup script executable
+RUN dos2unix startup.sh && chmod +x startup.sh
 
-# Expose port
+# Expose the port
 EXPOSE 8000
 
-# Use startup script for development (includes DB migrations + hot reload)
+# Run the application with database initialization (in hot reload)
 CMD ["./startup.sh", "dev"]
