@@ -1,4 +1,4 @@
-from sqlalchemy import String, Boolean, DateTime, Index, func, JSON
+from sqlalchemy import String, Boolean, DateTime, Index, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from typing import Optional, List
@@ -7,31 +7,74 @@ from app.db.base import Base, TimestampMixin
 
 
 class User(Base, TimestampMixin):
-    """User model for simple email/password authentication with SSO migration readiness."""
+    """User model matching existing database schema."""
 
     __tablename__ = "users"
-    __table_args__ = (
-        Index('ix_users_email_lower', func.lower('email'), unique=True),
-    )
 
     # Primary key
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
 
-    # Authentication fields
+    # Authentication fields - matching existing schema
     email: Mapped[str] = mapped_column(String(255), nullable=False)
-    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    # Profile fields - following DATABASE_OVERVIEW.md specification
-    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Profile fields - matching existing schema
+    first_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
 
     # Account status
-    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+    is_active: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    is_verified: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
 
-    # User preferences (JSON field as per spec)
-    preferences: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
+    # Role field from existing schema
+    role: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
 
     # Activity tracking
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+
+    # Properties to maintain compatibility with the expected interface
+    @property
+    def password_hash(self) -> str:
+        """Compatibility property for password_hash."""
+        return self.hashed_password
+
+    @password_hash.setter
+    def password_hash(self, value: str):
+        """Compatibility setter for password_hash."""
+        self.hashed_password = value
+
+    @property
+    def name(self) -> str:
+        """Compatibility property for name."""
+        if self.first_name and self.last_name:
+            return f"{self.first_name} {self.last_name}"
+        elif self.first_name:
+            return self.first_name
+        elif self.last_name:
+            return self.last_name
+        else:
+            return self.email
+
+    @name.setter
+    def name(self, value: str):
+        """Compatibility setter for name."""
+        if value:
+            parts = value.split(' ', 1)
+            self.first_name = parts[0] if parts else ''
+            self.last_name = parts[1] if len(parts) > 1 else ''
+        else:
+            self.first_name = ''
+            self.last_name = ''
+
+    @property
+    def preferences(self) -> Optional[dict]:
+        """Compatibility property for preferences (not stored in DB yet)."""
+        return None
+
+    @preferences.setter
+    def preferences(self, value: Optional[dict]):
+        """Compatibility setter for preferences (no-op for now)."""
+        pass
 
     # Relationships
     conversations: Mapped[List["Conversation"]] = relationship(
@@ -41,19 +84,7 @@ class User(Base, TimestampMixin):
         order_by="Conversation.created_at.desc()"
     )
 
-    @property
-    def first_name(self) -> str:
-        """Get first name from name field for backward compatibility."""
-        if self.name:
-            return self.name.split()[0]
-        return ""
 
-    @property
-    def last_name(self) -> str:
-        """Get last name from name field for backward compatibility."""
-        if self.name and len(self.name.split()) > 1:
-            return " ".join(self.name.split()[1:])
-        return ""
 
     @property
     def display_email(self) -> str:

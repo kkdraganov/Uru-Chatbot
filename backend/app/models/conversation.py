@@ -1,4 +1,4 @@
-from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text
+from sqlalchemy import String, Boolean, DateTime, ForeignKey, Text, Integer, Float
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from typing import Optional, List
@@ -7,7 +7,7 @@ from app.db.base import Base, TimestampMixin
 
 
 class Conversation(Base, TimestampMixin):
-    """Conversation model for organizing chat sessions and tracking conversation metadata."""
+    """Conversation model matching existing database schema."""
 
     __tablename__ = "conversations"
 
@@ -17,14 +17,19 @@ class Conversation(Base, TimestampMixin):
     # Foreign key to user
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
 
-    # Conversation metadata
+    # Conversation metadata - matching existing schema
     title: Mapped[str] = mapped_column(String(255), nullable=False)
-    ai_model: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., "gpt-4o", "o1-preview"
+    model: Mapped[str] = mapped_column(String(100), nullable=False)  # Database has 'model', not 'ai_model'
     system_prompt: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Organization flags
-    is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
-    is_pinned: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_archived: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    is_pinned: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+
+    # Statistics - additional columns from existing schema
+    message_count: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    total_tokens: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    estimated_cost: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
 
     # Activity tracking
     last_message_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -38,15 +43,16 @@ class Conversation(Base, TimestampMixin):
         order_by="Message.created_at"
     )
 
+    # Compatibility property for ai_model (frontend expects this)
     @property
-    def model(self) -> str:
-        """Backward compatibility property for ai_model field."""
-        return self.ai_model
+    def ai_model(self) -> str:
+        """Compatibility property for ai_model field."""
+        return self.model
 
-    @model.setter
-    def model(self, value: str) -> None:
-        """Backward compatibility setter for ai_model field."""
-        self.ai_model = value
+    @ai_model.setter
+    def ai_model(self, value: str) -> None:
+        """Compatibility setter for ai_model field."""
+        self.model = value
 
     def __repr__(self) -> str:
         return f"<Conversation(id={self.id}, title='{self.title}', user_id={self.user_id})>"

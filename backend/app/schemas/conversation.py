@@ -3,9 +3,9 @@ from typing import Optional, List
 from datetime import datetime
 
 class ConversationBase(BaseModel):
-    """Base conversation schema matching DATABASE_OVERVIEW.md specification."""
+    """Base conversation schema matching actual database schema."""
     title: str = Field(..., min_length=1, max_length=255)
-    ai_model: str = Field(..., min_length=1, max_length=100)
+    ai_model: str = Field(..., min_length=1, max_length=100)  # Frontend expects ai_model, model provides this via property
     system_prompt: Optional[str] = None
 
 class ConversationCreate(ConversationBase):
@@ -15,7 +15,7 @@ class ConversationCreate(ConversationBase):
 class ConversationUpdate(BaseModel):
     """Conversation update schema."""
     title: Optional[str] = Field(None, min_length=1, max_length=255)
-    ai_model: Optional[str] = Field(None, min_length=1, max_length=100)
+    ai_model: Optional[str] = Field(None, min_length=1, max_length=100)  # Frontend expects ai_model, model provides this via property
     system_prompt: Optional[str] = None
     is_archived: Optional[bool] = None
     is_pinned: Optional[bool] = None
@@ -47,7 +47,7 @@ class ConversationListResponse(BaseModel):
 class ConversationSearch(BaseModel):
     """Schema for conversation search."""
     query: Optional[str] = None
-    ai_model: Optional[str] = None
+    ai_model: Optional[str] = None  # Frontend expects ai_model, model provides this via property
     is_archived: Optional[bool] = None
     is_pinned: Optional[bool] = None
     date_from: Optional[datetime] = None

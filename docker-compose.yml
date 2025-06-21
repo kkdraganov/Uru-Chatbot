@@ -35,7 +35,7 @@ services:
       - ENVIRONMENT=${ENVIRONMENT:-production}
       - INSTANCE=${INSTANCE:-dev}
       - DATABASE_URL=postgresql+asyncpg://${DB_USER:-postgres}:${DB_PASSWORD:-postgres}@db:5432/${DB_NAME:-uru_chatbot}
-      - CORS_ORIGINS=["https://${INSTANCE}.uruenterprises.com","https://api.${INSTANCE}.uruenterprises.com"]
+      - CORS_ORIGINS=${CORS_ORIGINS:-["https://${INSTANCE}.uruenterprises.com","https://api.${INSTANCE}.uruenterprises.com"]}
       - SECRET_KEY=${SECRET_KEY:-development_secret_key}
       - MODEL_API_KEY=${MODEL_API_KEY:-your_openai_api_key}
       # Azure SSO Configuration (Backend)

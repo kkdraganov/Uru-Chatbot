@@ -13,9 +13,9 @@ while ! nc -z db 5432; do
 done
 echo "Database is ready!"
 
-# Run database migrations
-echo "Running database migrations..."
-cd database && alembic upgrade head && cd ..
+# Skip database migrations for now to avoid startup issues
+echo "Skipping database migrations..."
+# cd database && alembic upgrade head && cd ..
 
 # Start the application
 if [ "$RELOAD_MODE" = "true" ]; then

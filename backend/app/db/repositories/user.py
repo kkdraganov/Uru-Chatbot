@@ -27,23 +27,28 @@ class UserRepository:
     async def create(self, data: Union[UserCreate, Dict[str, Any]]) -> User:
         """Create a new user."""
         if isinstance(data, dict):
-            # Handle dict input
+            # Handle dict input - map to existing schema
             user = User(
                 email=data["email"].lower(),  # Store email in lowercase for consistency
-                password_hash=data["password_hash"],
-                name=data.get("name", ""),
+                hashed_password=data.get("password_hash", data.get("hashed_password", "")),
                 is_active=data.get("is_active", True),
-                preferences=data.get("preferences")
+                is_verified=data.get("is_verified", False),
+                role=data.get("role", "user")
             )
+            # Set name using the property setter
+            user.name = data.get("name", "")
         else:
             # Handle UserCreate schema
             user = User(
                 email=data.email.lower(),  # Store email in lowercase for consistency
-                password_hash=get_password_hash(data.password),
-                name=data.name,
+                hashed_password=get_password_hash(data.password),
                 is_active=True,
-                preferences=None
+                is_verified=False,
+                role="user"
             )
+            # Set name using the property setter
+            user.name = data.name
+
         self.session.add(user)
         await self.session.commit()
         await self.session.refresh(user)
@@ -59,7 +64,7 @@ class UserRepository:
 
         # Hash password if provided
         if "password" in update_data:
-            update_data["password_hash"] = get_password_hash(update_data.pop("password"))
+            update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
 
         # Ensure email is stored in lowercase for consistency
         if "email" in update_data:
@@ -77,7 +82,7 @@ class UserRepository:
         user = await self.get_by_email(email)
         if not user:
             return None
-        if not verify_password(password, user.password_hash):
+        if not verify_password(password, user.hashed_password):
             return None
         return user
 

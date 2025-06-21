@@ -16,8 +16,13 @@ class ConversationRepository:
         conversation = Conversation(
             title=data.title,
             user_id=user_id,
-            ai_model=data.ai_model,
-            system_prompt=data.system_prompt
+            model=data.ai_model,  # Map ai_model to model field
+            system_prompt=data.system_prompt,
+            is_archived=False,
+            is_pinned=False,
+            message_count=0,
+            total_tokens=0,
+            estimated_cost=0.0
         )
         self.session.add(conversation)
         await self.session.commit()
@@ -42,19 +47,24 @@ class ConversationRepository:
         return result.scalars().all()
     
     async def update(
-        self, 
-        conversation_id: int, 
-        user_id: int, 
+        self,
+        conversation_id: int,
+        user_id: int,
         data: ConversationUpdate
     ) -> Optional[Conversation]:
         """Update conversation metadata."""
         conversation = await self.get_by_id(conversation_id, user_id)
         if not conversation:
             return None
-        
-        for key, value in data.model_dump(exclude_unset=True).items():
-            setattr(conversation, key, value)
-        
+
+        # Map fields explicitly to handle ai_model -> model mapping
+        update_data = data.model_dump(exclude_unset=True)
+        for key, value in update_data.items():
+            if key == 'ai_model':
+                conversation.model = value  # Map ai_model to model field
+            else:
+                setattr(conversation, key, value)
+
         await self.session.commit()
         await self.session.refresh(conversation)
         return conversation
@@ -102,7 +112,7 @@ class ConversationRepository:
             query = query.where(Conversation.title.ilike(f"%{search_params.query}%"))
 
         if search_params.ai_model:
-            query = query.where(Conversation.ai_model == search_params.ai_model)
+            query = query.where(Conversation.model == search_params.ai_model)
 
         if search_params.is_archived is not None:
             query = query.where(Conversation.is_archived == search_params.is_archived)
