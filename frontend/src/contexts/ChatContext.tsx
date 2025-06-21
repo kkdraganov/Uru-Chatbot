@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from './AuthContext';
-import { api } from '../lib/api';
+import { api, Conversation, ConversationCreate, ConversationUpdate, ChatRequest } from '../lib/api';
 
 interface Message {
   role: 'user' | 'assistant' | 'system';
@@ -10,35 +10,18 @@ interface Message {
   model?: string;
 }
 
-interface Conversation {
-  id: string;
-  title: string;
-  messages: Message[];
-  model: string;
-  system_prompt?: string;
-  is_pinned: boolean;
-  is_archived: boolean;
-  message_count: number;
-  total_tokens: number;
-  estimated_cost: number;
-  last_message_at?: string;
-  created_at: string;
-  updated_at: string;
-  display_title: string;
-  is_empty: boolean;
-}
-
 interface ChatContextType {
   conversations: Conversation[];
   currentConversation: Conversation | null;
+  currentMessages: Message[];
   isLoading: boolean;
   error: string | null;
   streamingMessage: string;
-  createConversation: (model: string, title?: string) => Promise<void>;
-  selectConversation: (id: string) => Promise<void>;
+  createConversation: (conversationData: ConversationCreate) => Promise<void>;
+  selectConversation: (id: number) => Promise<void>;
   sendMessage: (content: string) => Promise<void>;
-  updateConversationTitle: (id: string, title: string) => Promise<void>;
-  deleteConversation: (id: string) => Promise<void>;
+  updateConversation: (id: number, updates: ConversationUpdate) => Promise<void>;
+  deleteConversation: (id: number) => Promise<void>;
   changeModel: (model: string) => Promise<void>;
   stopGeneration: () => void;
   refreshConversations: () => Promise<void>;
@@ -51,6 +34,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversation, setCurrentConversation] = useState<Conversation | null>(null);
+  const [currentMessages, setCurrentMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [streamingMessage, setStreamingMessage] = useState<string>('');
@@ -124,7 +108,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [abortController]);
   
   // Create a new conversation
-  const createConversation = useCallback(async (model: string, title?: string) => {
+  const createConversation = useCallback(async (conversationData: ConversationCreate) => {
     if (!isClient) {
       console.error('Client not initialized');
       return;
@@ -148,19 +132,11 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null);
 
     try {
-      const newConversation = await api.createConversation({
-        title: title || `New ${model} conversation`,
-        model
-      });
+      const newConversation = await api.createConversation(conversationData);
 
-      // Ensure messages array is initialized
-      const conversationWithMessages = {
-        ...newConversation,
-        messages: newConversation.messages || []
-      };
-
-      setConversations(prev => [conversationWithMessages, ...prev]);
-      setCurrentConversation(conversationWithMessages);
+      setConversations(prev => [newConversation, ...prev]);
+      setCurrentConversation(newConversation);
+      setCurrentMessages([]);
       setIsLoading(false);
 
       console.log('New conversation created');
@@ -174,7 +150,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       } else if (err.response?.status === 403) {
         setError('You do not have permission to create conversations.');
       } else {
-        setError(err.response?.data?.detail || err.message || 'Failed to create conversation');
+        setError(err.message || 'Failed to create conversation');
       }
 
       setIsLoading(false);
@@ -182,7 +158,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [isClient, user, handleUnauthorizedError]);
   
   // Select an existing conversation
-  const selectConversation = useCallback(async (id: string) => {
+  const selectConversation = useCallback(async (id: number) => {
     if (!isClient || !user) return;
 
     // Stop any ongoing generation
@@ -199,15 +175,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const conversation = conversations.find(c => c.id === id);
       if (conversation) {
         setCurrentConversation(conversation);
+        setCurrentMessages([]); // Messages will be loaded separately if needed
       } else {
         // Fetch from API if not in local state
         const fetchedConversation = await api.getConversation(id);
-        // Ensure messages array is initialized
-        const conversationWithMessages = {
-          ...fetchedConversation,
-          messages: fetchedConversation.messages || []
-        };
-        setCurrentConversation(conversationWithMessages);
+        setCurrentConversation(fetchedConversation);
+        setCurrentMessages([]); // Messages will be loaded separately if needed
       }
       setIsLoading(false);
     } catch (err: any) {
@@ -219,7 +192,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
 
-      setError(err.response?.data?.detail || 'Failed to load conversation');
+      setError(err.message || 'Failed to load conversation');
       setIsLoading(false);
     }
   }, [isClient, user, conversations, abortController, handleUnauthorizedError]);
@@ -240,25 +213,28 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return;
     }
 
-    // Add user message to conversation
+    // Add user message to current messages
     const userMessage: Message = {
       role: 'user',
       content,
       timestamp: new Date().toISOString()
     };
 
-    setCurrentConversation(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        messages: [...prev.messages, userMessage]
-      };
-    });
+    setCurrentMessages(prev => [...prev, userMessage]);
 
     try {
       // Create abort controller for this request
       const controller = new AbortController();
       setAbortController(controller);
+
+      // Prepare chat request
+      const chatRequest: ChatRequest = {
+        conversation_id: currentConversation.id,
+        message: content,
+        api_key: apiKey,
+        ai_model: currentConversation.ai_model,
+        stream: true
+      };
 
       // Send message and get streaming response
       const response = await fetch(`${api.getApiUrl()}/chat/message`, {
@@ -267,12 +243,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({
-          conversation_id: parseInt(currentConversation.id),
-          message: content,
-          api_key: apiKey,
-          model: currentConversation.model
-        }),
+        body: JSON.stringify(chatRequest),
         signal: controller.signal
       });
 
@@ -310,30 +281,15 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 assistantMessage += data.content;
                 setStreamingMessage(assistantMessage);
               } else if (data.type === 'complete') {
-                // Add final assistant message to conversation
+                // Add final assistant message to current messages
                 const finalAssistantMessage: Message = {
                   role: 'assistant',
                   content: assistantMessage,
                   timestamp: new Date().toISOString(),
-                  model: currentConversation.model
+                  model: currentConversation.ai_model
                 };
 
-                // Add message_id and cost if available from backend
-                if (data.message_id) {
-                  (finalAssistantMessage as any).messageId = data.message_id;
-                }
-                if (data.cost) {
-                  (finalAssistantMessage as any).cost = data.cost;
-                }
-
-                setCurrentConversation(prev => {
-                  if (!prev) return null;
-                  return {
-                    ...prev,
-                    messages: [...prev.messages, finalAssistantMessage]
-                  };
-                });
-
+                setCurrentMessages(prev => [...prev, finalAssistantMessage]);
                 setStreamingMessage('');
                 setIsLoading(false);
                 setAbortController(null);
@@ -366,27 +322,24 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     }
   }, [currentConversation, isClient, user, getApiKey, refreshConversations, handleUnauthorizedError]);
   
-  // Update conversation title
-  const updateConversationTitle = useCallback(async (id: string, title: string) => {
+  // Update conversation
+  const updateConversation = useCallback(async (id: number, updates: ConversationUpdate) => {
     if (!isClient || !user) return;
 
     try {
-      await api.updateConversation(id, { title });
+      const updatedConversation = await api.updateConversation(id, updates);
 
       setConversations(prev =>
         prev.map(conv =>
-          conv.id === id ? { ...conv, title, display_title: title } : conv
+          conv.id === id ? updatedConversation : conv
         )
       );
 
       if (currentConversation?.id === id) {
-        setCurrentConversation(prev => {
-          if (!prev) return null;
-          return { ...prev, title, display_title: title };
-        });
+        setCurrentConversation(updatedConversation);
       }
     } catch (err: any) {
-      console.error('Failed to update conversation title:', err);
+      console.error('Failed to update conversation:', err);
 
       // Handle unauthorized errors by redirecting to login
       if (err.response?.status === 401) {
@@ -394,12 +347,12 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         return;
       }
 
-      setError('Failed to update conversation title');
+      setError('Failed to update conversation');
     }
   }, [currentConversation, isClient, user, handleUnauthorizedError]);
 
   // Delete a conversation
-  const deleteConversation = useCallback(async (id: string) => {
+  const deleteConversation = useCallback(async (id: number) => {
     if (!isClient || !user) return;
 
     try {
@@ -411,6 +364,7 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       if (currentConversation?.id === id) {
         setCurrentConversation(null);
+        setCurrentMessages([]);
       }
 
       console.log('Conversation deleted');
@@ -432,16 +386,13 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     if (!currentConversation || !isClient || !user) return;
 
     try {
-      await api.updateConversation(currentConversation.id, { model });
+      const updatedConversation = await api.updateConversation(currentConversation.id, { ai_model: model });
 
-      setCurrentConversation(prev => {
-        if (!prev) return null;
-        return { ...prev, model };
-      });
+      setCurrentConversation(updatedConversation);
 
       setConversations(prev =>
         prev.map(conv =>
-          conv.id === currentConversation.id ? { ...conv, model } : conv
+          conv.id === currentConversation.id ? updatedConversation : conv
         )
       );
 
@@ -470,13 +421,14 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const value = {
     conversations,
     currentConversation,
+    currentMessages,
     isLoading,
     error,
     streamingMessage,
     createConversation,
     selectConversation,
     sendMessage,
-    updateConversationTitle,
+    updateConversation,
     deleteConversation,
     changeModel,
     stopGeneration,

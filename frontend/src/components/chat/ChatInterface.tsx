@@ -75,7 +75,7 @@ const ChatInterface: React.FC = () => {
               </div>
             </div>
           </div>
-        ) : currentConversation && currentConversation.messages.length === 0 && !streamingMessage ? (
+        ) : currentConversation && currentConversation.messages && currentConversation.messages.length === 0 && !streamingMessage ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center p-8 max-w-md">
               <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-green-500 to-blue-600 rounded-2xl flex items-center justify-center">
@@ -83,10 +83,10 @@ const ChatInterface: React.FC = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Start a New Conversation</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Send a message below to start chatting with {currentConversation.model}.
+                Send a message below to start chatting with {currentConversation.model || currentConversation.ai_model}.
               </p>
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                <p>Model: <span className="font-medium">{currentConversation.model}</span></p>
+                <p>Model: <span className="font-medium">{currentConversation.model || currentConversation.ai_model}</span></p>
                 {currentConversation.system_prompt && (
                   <p className="mt-1">Custom system prompt active</p>
                 )}
@@ -95,13 +95,13 @@ const ChatInterface: React.FC = () => {
           </div>
         ) : currentConversation ? (
           <div className="max-w-4xl mx-auto space-y-6">
-            {currentConversation.messages.map((message, index) => (
+            {currentConversation.messages?.map((message, index) => (
               <ChatMessage
                 key={`${currentConversation.id}-${index}`}
                 role={message.role}
                 content={message.content}
-                model={message.role === 'assistant' ? currentConversation.model : undefined}
-                timestamp={new Date().toISOString()} // In real app, this would come from message data
+                model={message.role === 'assistant' ? (currentConversation.model || currentConversation.ai_model) : undefined}
+                timestamp={message.timestamp || new Date().toISOString()}
               />
             ))}
 
@@ -110,7 +110,7 @@ const ChatInterface: React.FC = () => {
               <ChatMessage
                 role="assistant"
                 content={streamingMessage}
-                model={currentConversation.model}
+                model={currentConversation.model || currentConversation.ai_model}
                 isStreaming={true}
                 timestamp={new Date().toISOString()}
               />
@@ -135,7 +135,7 @@ const ChatInterface: React.FC = () => {
         ) : null}
 
         {/* Scroll to bottom button */}
-        {!isAtBottom && currentConversation && currentConversation.messages.length > 0 && (
+        {!isAtBottom && currentConversation && currentConversation.messages && currentConversation.messages.length > 0 && (
           <button
             onClick={scrollToBottom}
             className="fixed bottom-24 right-8 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-full p-2 shadow-lg hover:shadow-xl transition-all z-10"

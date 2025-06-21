@@ -26,7 +26,26 @@ export const decryptData = (encryptedData: string, userKey: string): string => {
   if (!encryptedData || !userKey) return '';
   try {
     const bytes = CryptoJS.AES.decrypt(encryptedData, userKey);
-    return bytes.toString(CryptoJS.enc.Utf8);
+    const decryptedText = bytes.toString(CryptoJS.enc.Utf8);
+
+    // Validate that decryption was successful by checking if we got valid UTF-8 text
+    // If decryption failed, CryptoJS returns an empty string or malformed data
+    if (!decryptedText || decryptedText.length === 0) {
+      console.warn('Decryption resulted in empty or invalid data');
+      return '';
+    }
+
+    // Additional validation: check if the decrypted text contains only valid characters
+    // This helps catch cases where wrong key was used but didn't throw an error
+    try {
+      // Try to encode and decode to validate UTF-8
+      const encoded = new TextEncoder().encode(decryptedText);
+      const decoded = new TextDecoder('utf-8', { fatal: true }).decode(encoded);
+      return decoded;
+    } catch (utf8Error) {
+      console.warn('Decrypted data contains invalid UTF-8 characters:', utf8Error);
+      return '';
+    }
   } catch (error) {
     console.error('Decryption failed:', error);
     return '';

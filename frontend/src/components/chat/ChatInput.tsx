@@ -138,7 +138,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ disabled = false }) => {
                   disabled={!canSend}
                   className={`p-3 rounded-2xl transition-colors ${
                     canSend
-                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      ? 'bg-primary-600 hover:bg-primary-700 text-white'
                       : 'bg-gray-200 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                   }`}
                   title="Send message"

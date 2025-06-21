@@ -92,7 +92,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ conversations, onNe
           key={conversation.id}
           className={`group relative rounded-lg transition-colors ${
             currentConversation?.id === conversation.id
-              ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+              ? 'bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800'
               : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
           }`}
         >

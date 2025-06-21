@@ -55,7 +55,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
         <div className={`flex-shrink-0 ${isUser ? 'ml-3' : 'mr-3'}`}>
           <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
             isUser
-              ? 'bg-blue-600 text-white'
+              ? 'bg-primary-600 text-white'
               : 'bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
           }`}>
             {isUser ? (
@@ -90,7 +90,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           <div
             className={`relative px-4 py-3 rounded-2xl max-w-none ${
               isUser
-                ? 'bg-blue-600 text-white rounded-tr-md'
+                ? 'bg-primary-600 text-white rounded-tr-md'
                 : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-tl-md'
             }`}
           >
