@@ -78,9 +78,31 @@ export const ChatProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       setConversations(conversationsWithMessages);
 
-      // If no current conversation and we have conversations, select the most recent one
-      if (!currentConversation && conversationsWithMessages.length > 0) {
-        setCurrentConversation(conversationsWithMessages[0]);
+      // If user has no conversations, create a welcome conversation
+      if (conversationsWithMessages.length === 0) {
+        console.log('No conversations found, creating welcome conversation...');
+        try {
+          const welcomeConversationData = {
+            title: 'Welcome to Uru Chatbot',
+            ai_model: 'gpt-4o',
+            system_prompt: 'You are a helpful AI assistant. Welcome the user to Uru Chatbot and explain that you can help them with various tasks, answer questions, and have conversations. Be friendly and encouraging.'
+          };
+
+          const welcomeConversation = await api.createConversation(welcomeConversationData);
+          setConversations([welcomeConversation]);
+          setCurrentConversation(welcomeConversation);
+          setCurrentMessages([]);
+
+          console.log('Welcome conversation created successfully');
+        } catch (welcomeError) {
+          console.error('Failed to create welcome conversation:', welcomeError);
+          // Don't throw error here, just log it - user can still create conversations manually
+        }
+      } else {
+        // If no current conversation and we have conversations, select the most recent one
+        if (!currentConversation && conversationsWithMessages.length > 0) {
+          setCurrentConversation(conversationsWithMessages[0]);
+        }
       }
     } catch (err: any) {
       console.error('Failed to load conversations:', err);

@@ -51,7 +51,12 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
 
     setIsCreatingConversation(true);
     try {
-      await createConversation('gpt-4o');
+      const conversationData = {
+        title: 'New Conversation',
+        ai_model: 'gpt-4o',
+        system_prompt: 'You are a helpful assistant.'
+      };
+      await createConversation(conversationData);
       showSuccess('Conversation Created', 'New conversation started successfully.');
     } catch (error) {
       console.error('Failed to create new conversation:', error);
@@ -62,13 +67,13 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
   };
 
   // Filter conversations based on search and filters
-  const filteredConversations = conversations.filter(conv => {
-    const matchesSearch = !searchQuery || 
+  const filteredConversations = (conversations || []).filter(conv => {
+    const matchesSearch = !searchQuery ||
       conv.title.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesArchived = showArchived ? conv.is_archived : !conv.is_archived;
     const matchesPinned = showPinned ? conv.is_pinned : true;
-    
+
     return matchesSearch && matchesArchived && matchesPinned;
   });
 
@@ -216,11 +221,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       {/* Footer */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          <p>{conversations.length} conversation{conversations.length !== 1 ? 's' : ''}</p>
-          {conversations.length > 0 && (
+          <p>{(conversations || []).length} conversation{(conversations || []).length !== 1 ? 's' : ''}</p>
+          {(conversations || []).length > 0 && (
             <p className="mt-1">
-              {conversations.filter(c => c.is_pinned).length} pinned • {' '}
-              {conversations.filter(c => c.is_archived).length} archived
+              {(conversations || []).filter(c => c.is_pinned).length} pinned • {' '}
+              {(conversations || []).filter(c => c.is_archived).length} archived
             </p>
           )}
         </div>

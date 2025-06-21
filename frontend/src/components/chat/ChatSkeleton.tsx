@@ -1,6 +1,32 @@
 import React from 'react';
 import { SkeletonLoader, SkeletonText, SkeletonAvatar } from '../ui/SkeletonLoader';
 
+// Define ConversationListSkeleton first to avoid hoisting issues
+export function ConversationListSkeleton({ items = 5 }: { items?: number }) {
+  // Ensure items is a valid number
+  const validItems = Math.max(1, Math.min(items || 5, 10));
+
+  return (
+    <div className="space-y-2 p-2" role="status" aria-label="Loading conversations">
+      {Array.from({ length: validItems }, (_, index) => (
+        <div key={`skeleton-${index}`} className="rounded-lg p-3 space-y-2">
+          <div className="flex items-center space-x-3">
+            <SkeletonLoader width="1.25rem" height="1.25rem" rounded="sm" />
+            <SkeletonLoader height="1rem" width="60%" />
+          </div>
+          <div className="ml-8">
+            <SkeletonLoader height="0.75rem" width="80%" />
+            <div className="flex items-center space-x-2 mt-1">
+              <SkeletonLoader height="0.625rem" width="3rem" />
+              <SkeletonLoader height="0.625rem" width="2rem" />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export const ChatMessageSkeleton: React.FC<{
   isUser?: boolean;
   className?: string;
@@ -8,15 +34,15 @@ export const ChatMessageSkeleton: React.FC<{
   <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} ${className}`}>
     <div className={`flex max-w-[80%] ${isUser ? 'flex-row-reverse' : 'flex-row'} items-start space-x-3`}>
       {!isUser && <SkeletonAvatar size="sm" />}
-      
+
       <div className={`rounded-2xl p-4 ${
         isUser
           ? 'bg-primary-600 text-white'
           : 'bg-gray-100 dark:bg-gray-800'
       }`}>
-        <SkeletonText 
-          lines={Math.floor(Math.random() * 3) + 1} 
-          className={isUser ? 'opacity-30' : ''} 
+        <SkeletonText
+          lines={Math.floor(Math.random() * 3) + 1}
+          className={isUser ? 'opacity-30' : ''}
         />
       </div>
     </div>
@@ -61,31 +87,7 @@ export const ChatInterfaceSkeleton: React.FC = () => (
   </div>
 );
 
-export const ConversationListSkeleton: React.FC<{
-  items?: number;
-}> = ({ items = 5 }) => {
-  return (
-    <div className="space-y-2 p-2">
-      {Array.from({ length: items }).map((_, index) => (
-        <div key={index} className="rounded-lg p-3 space-y-2">
-          <div className="flex items-center space-x-3">
-            <SkeletonLoader width="1.25rem" height="1.25rem" rounded="sm" />
-            <SkeletonLoader height="1rem" width="60%" />
-          </div>
-          <div className="ml-8">
-            <SkeletonLoader height="0.75rem" width="80%" />
-            <div className="flex items-center space-x-2 mt-1">
-              <SkeletonLoader height="0.625rem" width="3rem" />
-              <SkeletonLoader height="0.625rem" width="2rem" />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-};
-
-export const SidebarSkeleton: React.FC = () => {
+export function SidebarSkeleton() {
   return (
     <div className="w-80 bg-gray-50 dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col">
       {/* Header skeleton */}
@@ -124,6 +126,6 @@ export const SidebarSkeleton: React.FC = () => {
       </div>
     </div>
   );
-};
+}
 
 export default ChatInterfaceSkeleton;

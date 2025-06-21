@@ -6,7 +6,7 @@ class ChatRequest(BaseModel):
     conversation_id: int
     message: str
     api_key: str
-    model: Optional[str] = "gpt-4o"
+    ai_model: Optional[str] = "gpt-4o"
     system_prompt: Optional[str] = None
     temperature: Optional[float] = Field(default=0.7, ge=0.0, le=2.0)
     max_tokens: Optional[int] = Field(default=None, gt=0, le=4096)
@@ -26,7 +26,7 @@ class ChatResponse(BaseModel):
     token_count: int
     cost_estimate: float
     processing_time: float
-    model: str
+    ai_model: str
 
 class StreamChunk(BaseModel):
     """Schema for streaming response chunks."""

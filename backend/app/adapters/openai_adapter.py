@@ -40,7 +40,6 @@ class OpenAIAdapter(ModelAdapter):
                 model=ai_model,
                 messages=messages,
                 stream=True,
-                stream_options={"include_usage": True},
                 **kwargs
             )
 
@@ -51,13 +50,23 @@ class OpenAIAdapter(ModelAdapter):
                     content_chunks.append(content)
                     yield content, {"type": "content", "chunk": content}
 
-                # Handle usage information
+                # Handle usage information if available (some models provide it)
                 if hasattr(chunk, 'usage') and chunk.usage:
                     total_tokens = chunk.usage.total_tokens
                     completion_tokens = chunk.usage.completion_tokens
 
             # Calculate final metadata
             processing_time = time.time() - start_time
+
+            # Estimate tokens if not provided by the API
+            full_content = "".join(content_chunks)
+            if total_tokens == 0:
+                # Rough estimation: ~4 characters per token
+                estimated_completion_tokens = len(full_content) // 4
+                estimated_input_tokens = sum(len(msg.get("content", "")) for msg in messages) // 4
+                total_tokens = estimated_completion_tokens + estimated_input_tokens
+                completion_tokens = estimated_completion_tokens
+
             cost = self.calculate_cost(ai_model, total_tokens, completion_tokens)
 
             final_metadata = {
@@ -67,7 +76,7 @@ class OpenAIAdapter(ModelAdapter):
                 "processing_time": processing_time,
                 "cost_estimate": cost,
                 "model_used": ai_model,
-                "full_content": "".join(content_chunks)
+                "full_content": full_content
             }
 
             yield "", final_metadata
