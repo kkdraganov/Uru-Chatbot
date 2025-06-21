@@ -193,12 +193,10 @@ async def azure_login(
             # Create user with Azure data using dict approach
             user_data = {
                 "email": email,
-                "hashed_password": get_password_hash(os.urandom(24).hex()),
-                "first_name": graph_data.get("givenName", ""),
-                "last_name": graph_data.get("surname", ""),
+                "password_hash": get_password_hash(os.urandom(24).hex()),
+                "name": f"{graph_data.get('givenName', '')} {graph_data.get('surname', '')}".strip(),
                 "is_active": True,
-                "is_verified": True,
-                "role": None
+                "preferences": None
             }
             user = await user_repo.create(user_data)
 

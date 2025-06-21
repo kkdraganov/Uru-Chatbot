@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { useChat } from '../../contexts/ChatContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToast } from '../../contexts/ToastContext';
 import ConversationList from './ConversationList';
-import { 
-  PlusIcon, 
+import { ConversationListSkeleton } from './ChatSkeleton';
+import LoadingSpinner from '../ui/LoadingSpinner';
+import {
+  PlusIcon,
   XMarkIcon,
   MagnifyingGlassIcon,
   FunnelIcon,
@@ -25,9 +28,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
     error
   } = useChat();
   const { hasApiKey, isAuthenticated, user } = useAuth();
+  const { showSuccess, showError } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [showArchived, setShowArchived] = useState(false);
   const [showPinned, setShowPinned] = useState(false);
+  const [isCreatingConversation, setIsCreatingConversation] = useState(false);
 
   const handleNewChat = async () => {
     // Check authentication first
@@ -44,22 +49,31 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       return;
     }
 
+    setIsCreatingConversation(true);
     try {
-      await createConversation('gpt-4o');
-      console.log('New conversation created');
+      const conversationData = {
+        title: 'New Conversation',
+        ai_model: 'gpt-4o',
+        system_prompt: 'You are a helpful assistant.'
+      };
+      await createConversation(conversationData);
+      showSuccess('Conversation Created', 'New conversation started successfully.');
     } catch (error) {
       console.error('Failed to create new conversation:', error);
+      showError('Creation Failed', 'Failed to create new conversation. Please try again.');
+    } finally {
+      setIsCreatingConversation(false);
     }
   };
 
   // Filter conversations based on search and filters
-  const filteredConversations = conversations.filter(conv => {
-    const matchesSearch = !searchQuery || 
+  const filteredConversations = (conversations || []).filter(conv => {
+    const matchesSearch = !searchQuery ||
       conv.title.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesArchived = showArchived ? conv.is_archived : !conv.is_archived;
     const matchesPinned = showPinned ? conv.is_pinned : true;
-    
+
     return matchesSearch && matchesArchived && matchesPinned;
   });
 
@@ -89,8 +103,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         {/* New Chat Button */}
         <button
           onClick={handleNewChat}
-          disabled={isLoading || !isAuthenticated || !user || !hasApiKey()}
-          className="w-full flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg transition-colors"
+          disabled={isLoading || isCreatingConversation || !isAuthenticated || !user || !hasApiKey()}
+          className="w-full flex items-center justify-center space-x-2 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white px-4 py-2 rounded-lg transition-colors"
           title={
             !isAuthenticated || !user
               ? "Please log in to create conversations"
@@ -99,8 +113,17 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
               : "Create a new conversation"
           }
         >
-          <PlusIcon className="h-4 w-4" />
-          <span>New Chat</span>
+          {isCreatingConversation ? (
+            <>
+              <LoadingSpinner size="sm" color="white" />
+              <span>Creating...</span>
+            </>
+          ) : (
+            <>
+              <PlusIcon className="h-4 w-4" />
+              <span>New Chat</span>
+            </>
+          )}
         </button>
 
         {/* Authentication/API Key Status */}
@@ -128,7 +151,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
 
@@ -173,10 +196,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
         )}
 
         {isLoading ? (
-          <div className="p-4 text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Loading conversations...</p>
-          </div>
+          <ConversationListSkeleton />
         ) : sortedConversations.length === 0 ? (
           <div className="p-4 text-center text-gray-500 dark:text-gray-400">
             {searchQuery ? (
@@ -201,11 +221,11 @@ const Sidebar: React.FC<SidebarProps> = ({ onClose }) => {
       {/* Footer */}
       <div className="p-4 border-t border-gray-200 dark:border-gray-700">
         <div className="text-xs text-gray-500 dark:text-gray-400 text-center">
-          <p>{conversations.length} conversation{conversations.length !== 1 ? 's' : ''}</p>
-          {conversations.length > 0 && (
+          <p>{(conversations || []).length} conversation{(conversations || []).length !== 1 ? 's' : ''}</p>
+          {(conversations || []).length > 0 && (
             <p className="mt-1">
-              {conversations.filter(c => c.is_pinned).length} pinned • {' '}
-              {conversations.filter(c => c.is_archived).length} archived
+              {(conversations || []).filter(c => c.is_pinned).length} pinned • {' '}
+              {(conversations || []).filter(c => c.is_archived).length} archived
             </p>
           )}
         </div>

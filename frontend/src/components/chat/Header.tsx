@@ -48,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({
             </h1>
             {currentConversation && (
               <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                • {currentConversation.display_title}
+                • {currentConversation.title}
               </span>
             )}
           </div>
@@ -58,7 +58,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex-1 flex justify-center max-w-xs">
           {currentConversation && (
             <ModelSelector
-              currentModel={currentConversation.model}
+              currentModel={currentConversation.ai_model}
               onModelChange={changeModel}
             />
           )}
@@ -80,7 +80,7 @@ const Header: React.FC<HeaderProps> = ({
             <Menu.Button className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
               <UserCircleIcon className="h-6 w-6 text-gray-600 dark:text-gray-400" />
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300 hidden sm:block">
-                {user?.full_name || getDisplayEmail(user?.email || '')}
+                {user?.name || getDisplayEmail(user?.email || '')}
               </span>
             </Menu.Button>
 
@@ -97,7 +97,7 @@ const Header: React.FC<HeaderProps> = ({
                 <div className="py-1">
                   <div className="px-4 py-2 border-b border-gray-200 dark:border-gray-700">
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {user?.full_name || 'User'}
+                      {user?.name || 'User'}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       {getDisplayEmail(user?.email || '')}

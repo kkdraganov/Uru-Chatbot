@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosResponse } from 'axios';
 
 // Function to determine API URL
 function getApiUrl(): string {
@@ -50,6 +50,96 @@ function getApiUrl(): string {
   return 'http://localhost:8000/api';
 }
 
+// Types matching OpenAPI schema exactly
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  is_active: boolean;
+  preferences?: any;
+  last_login?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserCreate {
+  email: string;
+  name: string;
+  password: string;
+}
+
+export interface Token {
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  expires_in: number;
+}
+
+export interface Conversation {
+  id: number;
+  title: string;
+  ai_model: string;
+  system_prompt?: string;
+  user_id: number;
+  is_archived: boolean;
+  is_pinned: boolean;
+  last_message_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ConversationCreate {
+  title: string;
+  ai_model: string;
+  system_prompt?: string;
+}
+
+export interface ConversationUpdate {
+  title?: string;
+  ai_model?: string;
+  system_prompt?: string;
+  is_archived?: boolean;
+  is_pinned?: boolean;
+}
+
+export interface ChatRequest {
+  conversation_id: number;
+  message: string;
+  api_key: string;
+  ai_model?: string;
+  system_prompt?: string;
+  temperature?: number;
+  max_tokens?: number;
+  stream?: boolean;
+}
+
+export interface ModelInfo {
+  id: string;
+  name: string;
+  description: string;
+  context_length: number;
+  input_cost_per_token: number;
+  output_cost_per_token: number;
+  supports_streaming: boolean;
+}
+
+export interface AvailableModelsResponse {
+  models: ModelInfo[];
+  default_model: string;
+}
+
+export interface ValidateKeyRequest {
+  api_key: string;
+}
+
+export interface ValidateKeyResponse {
+  valid: boolean;
+  models?: string[];
+  organization?: string;
+  usage_limit?: any;
+  error?: string;
+}
+
 const API_URL = getApiUrl();
 
 // Create axios instance with base URL
@@ -91,19 +181,19 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Response Error:', error);
-    
+
     // Handle network errors
     if (!error.response) {
       console.error('Network Error - Unable to reach the server');
       return Promise.reject(new Error('Unable to connect to the server. Please check your internet connection.'));
     }
-    
+
     // Handle 401 Unauthorized errors
     if (error.response.status === 401) {
       // Only access localStorage in browser environment
       if (typeof window !== 'undefined') {
         localStorage.removeItem('token');
-        localStorage.removeItem('userId');
+        localStorage.removeItem('refresh_token');
         window.location.href = '/login';
       }
     }
@@ -157,76 +247,58 @@ export const api = {
     return response.data;
   },
 
-  register: async (email: string, password: string, firstName?: string, lastName?: string) => {
-    try {
-      const response = await apiClient.post('/auth/register', {
-        email,
-        password,
-        first_name: firstName,
-        last_name: lastName
-      }, {
-        withCredentials: false
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Registration error:', error);
-      throw error;
-    }
+  register: async (userData: UserCreate): Promise<User> => {
+    const response = await apiClient.post('/auth/register', userData);
+    return response.data;
   },
 
-  getCurrentUser: async () => {
+  getCurrentUser: async (): Promise<User> => {
     const response = await apiClient.get('/auth/me');
     return response.data;
   },
-  
-  // Conversation endpoints
-  getConversations: async () => {
-    const response = await apiClient.get('/conversations');
+
+  // Conversation endpoints - matching OpenAPI schema exactly
+  getConversations: async (): Promise<Conversation[]> => {
+    const response = await apiClient.get('/conversations/');
     return response.data;
   },
 
-  getConversation: async (id: string) => {
-    const response = await apiClient.get(`/conversations/${id}`);
+  getConversation: async (conversationId: number): Promise<Conversation> => {
+    const response = await apiClient.get(`/conversations/${conversationId}`);
     return response.data;
   },
 
-  createConversation: async (data: { title: string; model: string; system_prompt?: string }) => {
-    const response = await apiClient.post('/conversations', data);
+  createConversation: async (conversationData: ConversationCreate): Promise<Conversation> => {
+    const response = await apiClient.post('/conversations/', conversationData);
     return response.data;
   },
 
-  updateConversation: async (id: string, data: { title?: string, model?: string }) => {
-    const response = await apiClient.patch(`/conversations/${id}`, data);
+  updateConversation: async (conversationId: number, updates: ConversationUpdate): Promise<Conversation> => {
+    const response = await apiClient.patch(`/conversations/${conversationId}`, updates);
     return response.data;
   },
 
-  deleteConversation: async (id: string) => {
-    const response = await apiClient.delete(`/conversations/${id}`);
-    return response.data;
+  deleteConversation: async (conversationId: number): Promise<void> => {
+    await apiClient.delete(`/conversations/${conversationId}`);
   },
-  
-  // Chat endpoints
-  sendMessage: async (conversationId: string, message: string, apiKey: string, model?: string) => {
-    const response = await apiClient.post('/chat/message', {
-      conversation_id: parseInt(conversationId),
-      message,
-      api_key: apiKey,
-      model
-    });
+
+  // Chat endpoints - matching OpenAPI schema exactly
+  sendMessage: async (chatRequest: ChatRequest): Promise<any> => {
+    const response = await apiClient.post('/chat/message', chatRequest);
     return response.data;
   },
 
-  validateApiKey: async (apiKey: string) => {
-    const response = await apiClient.post('/chat/validate-key', { api_key: apiKey });
+  validateApiKey: async (validateRequest: ValidateKeyRequest): Promise<ValidateKeyResponse> => {
+    const response = await apiClient.post('/chat/validate-key', validateRequest);
     return response.data;
   },
 
-  getAvailableModels: async () => {
+  getAvailableModels: async (): Promise<AvailableModelsResponse> => {
     const response = await apiClient.get('/chat/models');
     return response.data;
   },
 
-  getModelInfo: async (modelId: string) => {
+  getModelInfo: async (modelId: string): Promise<ModelInfo> => {
     const response = await apiClient.get(`/chat/models/${modelId}`);
     return response.data;
   },
@@ -252,9 +324,31 @@ export const api = {
     return response;
   },
   
-  // Add Azure login endpoint
-  azureLogin: async (code: string) => {
+  // Azure SSO login endpoint
+  azureLogin: async (code: string): Promise<Token> => {
     const response = await apiClient.post('/auth/azure-login', { code });
     return response.data;
+  },
+
+  // Streaming support for chat messages
+  sendMessageStream: async (chatRequest: ChatRequest): Promise<ReadableStream> => {
+    const response = await fetch(`${API_URL}/chat/message`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+      },
+      body: JSON.stringify({ ...chatRequest, stream: true }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    if (!response.body) {
+      throw new Error('No response body for streaming');
+    }
+
+    return response.body;
   },
 };

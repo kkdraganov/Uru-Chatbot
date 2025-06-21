@@ -24,7 +24,7 @@ class Message(Base):
     content_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)  # SHA-256 hash for deduplication
 
     # AI-specific fields
-    model: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # AI model that generated response (for AI messages)
+    ai_model: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)  # AI model that generated response (for AI messages)
 
     # Error handling
     is_error: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
@@ -35,6 +35,16 @@ class Message(Base):
 
     # Relationships
     conversation: Mapped["Conversation"] = relationship("Conversation", back_populates="messages")
+
+    @property
+    def model(self) -> Optional[str]:
+        """Backward compatibility property for ai_model field."""
+        return self.ai_model
+
+    @model.setter
+    def model(self, value: Optional[str]) -> None:
+        """Backward compatibility setter for ai_model field."""
+        self.ai_model = value
 
     @property
     def is_user_message(self) -> bool:

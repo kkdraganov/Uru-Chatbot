@@ -1,16 +1,14 @@
 import React, { createContext, useContext, useState, useCallback, ReactNode, useEffect } from 'react';
-import { api } from '../lib/api';
+import { api, UserCreate, ValidateKeyRequest, ValidateKeyResponse } from '../lib/api';
 import { storeApiKey, getApiKey, clearApiKey } from '../lib/encryption';
 
 interface User {
   id: number;
   email: string;
-  first_name?: string;
-  last_name?: string;
-  role: string;
+  name: string;
   is_active: boolean;
-  is_verified: boolean;
-  full_name: string;
+  preferences?: any;
+  last_login?: string;
   created_at: string;
   updated_at: string;
 }
@@ -35,12 +33,12 @@ interface AuthContextType {
   isLoading: boolean;
   error: string | null;
   login: (email: string, password: string) => Promise<boolean>;
-  register: (email: string, password: string, firstName?: string, lastName?: string) => Promise<boolean>;
+  register: (userData: UserCreate) => Promise<boolean>;
   logout: () => void;
   setApiKey: (apiKey: string) => void;
   getApiKey: () => string | null;
   hasApiKey: () => boolean;
-  validateApiKey: (apiKey: string) => Promise<{ valid: boolean; error?: string; models?: string[] }>;
+  validateApiKey: (apiKey: string) => Promise<ValidateKeyResponse>;
   refreshUser: () => Promise<void>;
   azureLogin: (code: string) => Promise<boolean>;
   getDisplayEmail: (email: string) => string;
@@ -50,10 +48,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+
+  // Computed property: user is authenticated if user object exists
+  const isAuthenticated = !!user;
 
   // Initialize client-side state
   useEffect(() => {
@@ -67,13 +67,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (token) {
         // Validate token and get user info
         await refreshUser();
-        setIsAuthenticated(true);
+        // isAuthenticated will be true automatically if user is set by refreshUser
+      } else {
+        // No token found, ensure user is null
+        setUser(null);
       }
     } catch (error) {
       console.error('Auth initialization failed:', error);
-      // Clear invalid token
+      // Clear invalid token and user data
       localStorage.removeItem('token');
-      setIsAuthenticated(false);
+      localStorage.removeItem('refresh_token');
+      setUser(null);
     } finally {
       setIsLoading(false);
     }
@@ -110,8 +114,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
       // Get user data
       await refreshUser();
+      // isAuthenticated will be true automatically if user is set by refreshUser
 
-      setIsAuthenticated(true);
       setIsLoading(false);
       return true;
     } catch (err: any) {
@@ -122,22 +126,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [isClient, refreshUser]);
 
   // Register function
-  const register = useCallback(async (
-    email: string,
-    password: string,
-    firstName?: string,
-    lastName?: string
-  ): Promise<boolean> => {
+  const register = useCallback(async (userData: UserCreate): Promise<boolean> => {
     if (!isClient) return false;
 
     setIsLoading(true);
     setError(null);
 
     try {
-      await api.register(email, password, firstName, lastName);
-      return await login(email, password);
+      await api.register(userData);
+      return await login(userData.email, userData.password);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Registration failed');
+      setError(err.message || 'Registration failed');
       setIsLoading(false);
       return false;
     }
@@ -151,7 +150,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('refresh_token');
     clearApiKey();
     setUser(null);
-    setIsAuthenticated(false);
+    // isAuthenticated will be false automatically when user is null
   }, [isClient]);
 
   // Set API key function
@@ -167,18 +166,19 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   }, [isClient]);
 
   // Validate API key function
-  const validateApiKey = useCallback(async (apiKey: string) => {
+  const validateApiKey = useCallback(async (apiKey: string): Promise<ValidateKeyResponse> => {
     if (!isClient) {
       return { valid: false, error: 'Client not ready' };
     }
 
     try {
-      const result = await api.validateApiKey(apiKey);
+      const validateRequest: ValidateKeyRequest = { api_key: apiKey };
+      const result = await api.validateApiKey(validateRequest);
       return result;
     } catch (err: any) {
       return {
         valid: false,
-        error: err.response?.data?.detail || 'Failed to validate API key'
+        error: err.message || 'Failed to validate API key'
       };
     }
   }, [isClient]);
@@ -201,8 +201,8 @@ const azureLogin = useCallback(async (code: string): Promise<boolean> => {
 
     // Get user data
     await refreshUser();
-  
-    setIsAuthenticated(true);
+    // isAuthenticated will be true automatically if user is set by refreshUser
+
     setIsLoading(false);
     return true;
   } catch (err: any) {

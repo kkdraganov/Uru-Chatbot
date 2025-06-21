@@ -14,14 +14,13 @@ import { Fragment } from 'react';
 
 
 interface Conversation {
-  id: string;
+  id: number;
   title: string;
-  model: string;
+  ai_model: string;
   is_pinned: boolean;
   is_archived: boolean;
   message_count: number;
   updated_at: string;
-  display_title: string;
 }
 
 interface ConversationListProps {
@@ -34,10 +33,10 @@ const ConversationList: React.FC<ConversationListProps> = ({ conversations, onNe
     currentConversation,
     selectConversation,
     deleteConversation,
-    updateConversationTitle,
+    updateConversation,
     isLoading
   } = useChat();
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
   const [editTitle, setEditTitle] = useState('');
 
   const handleStartEdit = (conversation: Conversation) => {
@@ -45,10 +44,10 @@ const ConversationList: React.FC<ConversationListProps> = ({ conversations, onNe
     setEditTitle(conversation.title);
   };
 
-  const handleSaveEdit = async (conversationId: string) => {
+  const handleSaveEdit = async (conversationId: number) => {
     if (editTitle.trim()) {
       try {
-        await updateConversationTitle(conversationId, editTitle.trim());
+        await updateConversation(conversationId, { title: editTitle.trim() });
         setEditingId(null);
         console.log('Title updated');
       } catch (error) {
@@ -62,7 +61,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ conversations, onNe
     setEditTitle('');
   };
 
-  const handleDelete = async (conversationId: string) => {
+  const handleDelete = async (conversationId: number) => {
     try {
       await deleteConversation(conversationId);
       console.log('Conversation deleted');
@@ -92,7 +91,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ conversations, onNe
           key={conversation.id}
           className={`group relative rounded-lg transition-colors ${
             currentConversation?.id === conversation.id
-              ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800'
+              ? 'bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800'
               : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'
           }`}
         >
@@ -130,7 +129,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ conversations, onNe
                 <>
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                      {conversation.display_title}
+                      {conversation.title}
                     </h3>
                     <span className="text-xs text-gray-500 dark:text-gray-400 ml-2 flex-shrink-0">
                       {formatDate(conversation.updated_at)}
@@ -138,7 +137,7 @@ const ConversationList: React.FC<ConversationListProps> = ({ conversations, onNe
                   </div>
                   <div className="flex items-center mt-1 space-x-2">
                     <span className="text-xs text-gray-500 dark:text-gray-400">
-                      {conversation.model}
+                      {conversation.ai_model}
                     </span>
                     {conversation.message_count > 0 && (
                       <>

@@ -4,6 +4,7 @@ import { Fragment } from 'react';
 import { XMarkIcon, EyeIcon, EyeSlashIcon, CheckCircleIcon, ExclamationTriangleIcon, SunIcon, MoonIcon, ComputerDesktopIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useToast } from '../../contexts/ToastContext';
 
 
 interface SettingsModalProps {
@@ -19,9 +20,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const { user, setApiKey, getApiKey, validateApiKey } = useAuth();
   const { theme, setTheme } = useTheme();
+  const { showSuccess, showError } = useToast();
   const [apiKey, setApiKeyValue] = useState('');
   const [showApiKey, setShowApiKey] = useState(false);
   const [validating, setValidating] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [validationResult, setValidationResult] = useState<{
     valid: boolean;
     error?: string;
@@ -49,22 +52,22 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     try {
       const result = await validateApiKey(apiKey);
       setValidationResult(result);
-      
+
       if (result.valid) {
-        console.log('API key is valid!');
+        showSuccess('API Key Valid', 'Your API key has been validated successfully.');
       } else {
-        console.error(result.error || 'Invalid API key');
+        showError('Invalid API Key', result.error || 'Please check your API key and try again.');
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Validation failed';
       setValidationResult({ valid: false, error: errorMessage });
-      console.error(errorMessage);
+      showError('Validation Failed', errorMessage);
     } finally {
       setValidating(false);
     }
   };
 
-  const handleSaveApiKey = () => {
+  const handleSaveApiKey = async () => {
     if (!apiKey.trim()) {
       console.error('Please enter an API key');
       return;
@@ -75,11 +78,20 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       return;
     }
 
-    setApiKey(apiKey);
-    console.log('API key saved successfully');
-    
-    if (showApiKeyPrompt) {
-      onClose();
+    setSaving(true);
+    try {
+      // Add a small delay to show the loading state
+      await new Promise(resolve => setTimeout(resolve, 500));
+      setApiKey(apiKey);
+      showSuccess('API Key Saved', 'Your API key has been saved securely.');
+
+      if (showApiKeyPrompt) {
+        onClose();
+      }
+    } catch (error) {
+      showError('Save Failed', 'Failed to save API key. Please try again.');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -87,7 +99,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     setApiKey('');
     setApiKeyValue('');
     setValidationResult(null);
-    console.log('API key removed');
+    showSuccess('API Key Removed', 'Your API key has been removed from local storage.');
   };
 
   const tabs = [
@@ -160,14 +172,14 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     {/* API Key Tab */}
                     <Tab.Panel className="space-y-4">
                       {showApiKeyPrompt && (
-                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4">
+                        <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-4">
                           <div className="flex">
-                            <ExclamationTriangleIcon className="h-5 w-5 text-blue-400 mt-0.5" />
+                            <ExclamationTriangleIcon className="h-5 w-5 text-primary-400 mt-0.5" />
                             <div className="ml-3">
-                              <h3 className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                              <h3 className="text-sm font-medium text-primary-800 dark:text-primary-200">
                                 API Key Required
                               </h3>
-                              <p className="mt-1 text-sm text-blue-700 dark:text-blue-300">
+                              <p className="mt-1 text-sm text-primary-700 dark:text-primary-300">
                                 Please add your OpenAI API key to start chatting. Your key is stored securely in your browser and never sent to our servers.
                               </p>
                             </div>
@@ -242,16 +254,16 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         <button
                           onClick={handleValidateApiKey}
                           disabled={validating || !apiKey.trim()}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white px-4 py-2 rounded-lg transition-colors"
+                          className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-primary-400 text-white px-4 py-2 rounded-lg transition-colors"
                         >
                           {validating ? 'Validating...' : 'Validate Key'}
                         </button>
                         <button
                           onClick={handleSaveApiKey}
-                          disabled={!apiKey.trim()}
+                          disabled={saving || !apiKey.trim()}
                           className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-4 py-2 rounded-lg transition-colors"
                         >
-                          Save Key
+                          {saving ? 'Saving...' : 'Save Key'}
                         </button>
                         {getApiKey() && (
                           <button
@@ -316,7 +328,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                                 onClick={() => setTheme(value as any)}
                                 className={`flex flex-col items-center p-3 rounded-lg border-2 transition-colors ${
                                   theme === value
-                                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                                    ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20 text-primary-700 dark:text-primary-300'
                                     : 'border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300'
                                 }`}
                               >

@@ -31,22 +31,22 @@ const nextConfig = {
   },
   images: {
     domains: (() => {
-      const baseDomains = ['localhost'];
+      const environment = process.env.ENVIRONMENT;
       const instance = process.env.INSTANCE;
+
+      // Always include localhost for development
+      const baseDomains = ['localhost', '127.0.0.1'];
       let instanceDomains = [];
 
-      if (instance && instance !== 'dev') {
+      // Only add production domains if we're actually in production
+      if (environment === 'production' && instance && instance !== 'dev') {
         instanceDomains = [
           `${instance}.uruenterprises.com`,
           `api.${instance}.uruenterprises.com`
         ];
-      } else {
-        // Development fallback
-        instanceDomains = [
-          'dynamosoftware.dev.uruenterprises.com',
-          'api.dynamosoftware.dev.uruenterprises.com'
-        ];
       }
+      // For development, don't add the production domains since they're not used
+      // This prevents unnecessary domain allowlisting
 
       const allDomains = [...baseDomains, ...instanceDomains];
       // DEBUG: Log image domains configuration (next.config.js:image_domains)
