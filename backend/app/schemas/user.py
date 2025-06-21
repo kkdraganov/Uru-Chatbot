@@ -3,15 +3,13 @@ from typing import Optional, List
 from datetime import datetime
 
 class UserBase(BaseModel):
-    """Base user schema matching actual database structure."""
+    """Base user schema matching DATABASE_OVERVIEW.md specification."""
     email: EmailStr
-    first_name: Optional[str] = Field(None, max_length=100)
-    last_name: Optional[str] = Field(None, max_length=100)
+    name: str = Field(..., max_length=255)
 
 class UserCreate(UserBase):
     """User creation schema."""
     password: str = Field(..., min_length=8, max_length=100)
-    role: Optional[str] = Field(default="user")
 
     @validator('password')
     def validate_password(cls, v):
@@ -28,19 +26,16 @@ class UserCreate(UserBase):
 class UserUpdate(BaseModel):
     """User update schema."""
     email: Optional[EmailStr] = None
-    first_name: Optional[str] = Field(None, max_length=100)
-    last_name: Optional[str] = Field(None, max_length=100)
+    name: Optional[str] = Field(None, max_length=255)
     is_active: Optional[bool] = None
-    role: Optional[str] = Field(None, max_length=50)
-    is_verified: Optional[bool] = None
+    preferences: Optional[dict] = None
     password: Optional[str] = Field(None, min_length=8)
 
 class UserInDBBase(UserBase):
     """Base schema for User in DB."""
     id: int
-    is_active: Optional[bool] = None
-    role: Optional[str] = None
-    is_verified: Optional[bool] = None
+    is_active: bool = True
+    preferences: Optional[dict] = None
     last_login: Optional[datetime] = None
     created_at: datetime
     updated_at: datetime
@@ -53,7 +48,7 @@ class User(UserInDBBase):
 
 class UserInDB(UserInDBBase):
     """User schema with password hash."""
-    hashed_password: str
+    password_hash: str
 
 class UserLogin(BaseModel):
     """Schema for user login."""
@@ -88,10 +83,4 @@ class RefreshTokenRequest(BaseModel):
     """Refresh token request schema."""
     refresh_token: str
 
-class UserStats(BaseModel):
-    """User statistics schema."""
-    total_conversations: int
-    total_messages: int
-    total_tokens: int
-    estimated_total_cost: float
-    last_activity: Optional[datetime] = None
+# UserStats removed - not part of DATABASE_OVERVIEW.md specification

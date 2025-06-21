@@ -30,23 +30,19 @@ class UserRepository:
             # Handle dict input
             user = User(
                 email=data["email"].lower(),  # Store email in lowercase for consistency
-                hashed_password=data["hashed_password"],
-                first_name=data.get("first_name", ""),
-                last_name=data.get("last_name", ""),
+                password_hash=data["password_hash"],
+                name=data.get("name", ""),
                 is_active=data.get("is_active", True),
-                role=data.get("role"),
-                is_verified=data.get("is_verified")
+                preferences=data.get("preferences")
             )
         else:
             # Handle UserCreate schema
             user = User(
                 email=data.email.lower(),  # Store email in lowercase for consistency
-                hashed_password=get_password_hash(data.password),
-                first_name=data.name.split()[0] if data.name else "",
-                last_name=" ".join(data.name.split()[1:]) if len(data.name.split()) > 1 else "",
+                password_hash=get_password_hash(data.password),
+                name=data.name,
                 is_active=True,
-                role=None,
-                is_verified=None
+                preferences=None
             )
         self.session.add(user)
         await self.session.commit()
@@ -63,7 +59,7 @@ class UserRepository:
 
         # Hash password if provided
         if "password" in update_data:
-            update_data["hashed_password"] = get_password_hash(update_data.pop("password"))
+            update_data["password_hash"] = get_password_hash(update_data.pop("password"))
 
         # Ensure email is stored in lowercase for consistency
         if "email" in update_data:
@@ -81,7 +77,7 @@ class UserRepository:
         user = await self.get_by_email(email)
         if not user:
             return None
-        if not verify_password(password, user.hashed_password):
+        if not verify_password(password, user.password_hash):
             return None
         return user
 

@@ -1,4 +1,4 @@
-from sqlalchemy import String, Boolean, DateTime, Index, func
+from sqlalchemy import String, Boolean, DateTime, Index, func, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from datetime import datetime
 from typing import Optional, List
@@ -19,18 +19,16 @@ class User(Base, TimestampMixin):
 
     # Authentication fields
     email: Mapped[str] = mapped_column(String(255), nullable=False)
-    hashed_password: Mapped[str] = mapped_column(String(255), nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
 
-    # Profile fields
-    first_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-    last_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
-
-    # Additional fields to match database
-    role: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
-    is_verified: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    # Profile fields - following DATABASE_OVERVIEW.md specification
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
 
     # Account status
-    is_active: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, nullable=False, default=True)
+
+    # User preferences (JSON field as per spec)
+    preferences: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
     # Activity tracking
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -44,16 +42,18 @@ class User(Base, TimestampMixin):
     )
 
     @property
-    def name(self) -> str:
-        """Get full name from first_name and last_name."""
-        if self.first_name and self.last_name:
-            return f"{self.first_name} {self.last_name}"
-        elif self.first_name:
-            return self.first_name
-        elif self.last_name:
-            return self.last_name
-        else:
-            return self.display_email.split('@')[0]  # Fallback to email username
+    def first_name(self) -> str:
+        """Get first name from name field for backward compatibility."""
+        if self.name:
+            return self.name.split()[0]
+        return ""
+
+    @property
+    def last_name(self) -> str:
+        """Get last name from name field for backward compatibility."""
+        if self.name and len(self.name.split()) > 1:
+            return " ".join(self.name.split()[1:])
+        return ""
 
     @property
     def display_email(self) -> str:

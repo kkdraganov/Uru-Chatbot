@@ -19,7 +19,7 @@ class Conversation(Base, TimestampMixin):
 
     # Conversation metadata
     title: Mapped[str] = mapped_column(String(255), nullable=False)
-    model: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., "gpt-4o", "o1-preview"
+    ai_model: Mapped[str] = mapped_column(String(100), nullable=False)  # e.g., "gpt-4o", "o1-preview"
     system_prompt: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
 
     # Organization flags
@@ -37,6 +37,16 @@ class Conversation(Base, TimestampMixin):
         cascade="all, delete-orphan",
         order_by="Message.created_at"
     )
+
+    @property
+    def model(self) -> str:
+        """Backward compatibility property for ai_model field."""
+        return self.ai_model
+
+    @model.setter
+    def model(self, value: str) -> None:
+        """Backward compatibility setter for ai_model field."""
+        self.ai_model = value
 
     def __repr__(self) -> str:
         return f"<Conversation(id={self.id}, title='{self.title}', user_id={self.user_id})>"
