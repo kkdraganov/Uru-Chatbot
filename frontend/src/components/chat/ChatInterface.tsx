@@ -83,10 +83,10 @@ const ChatInterface: React.FC = () => {
               </div>
               <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">Start a New Conversation</h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                Send a message below to start chatting with {currentConversation.model || currentConversation.ai_model}.
+                Send a message below to start chatting with {currentConversation.ai_model}.
               </p>
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                <p>Model: <span className="font-medium">{currentConversation.model || currentConversation.ai_model}</span></p>
+                <p>Model: <span className="font-medium">{currentConversation.ai_model}</span></p>
                 {currentConversation.system_prompt && (
                   <p className="mt-1">Custom system prompt active</p>
                 )}
@@ -100,7 +100,7 @@ const ChatInterface: React.FC = () => {
                 key={`${currentConversation.id}-${index}`}
                 role={message.role}
                 content={message.content}
-                model={message.role === 'assistant' ? (currentConversation.model || currentConversation.ai_model) : undefined}
+                model={message.role === 'assistant' ? currentConversation.ai_model : undefined}
                 timestamp={message.timestamp || new Date().toISOString()}
               />
             ))}
@@ -110,7 +110,7 @@ const ChatInterface: React.FC = () => {
               <ChatMessage
                 role="assistant"
                 content={streamingMessage}
-                model={currentConversation.model || currentConversation.ai_model}
+                model={currentConversation.ai_model}
                 isStreaming={true}
                 timestamp={new Date().toISOString()}
               />

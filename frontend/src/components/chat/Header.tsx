@@ -48,7 +48,7 @@ const Header: React.FC<HeaderProps> = ({
             </h1>
             {currentConversation && (
               <span className="text-sm text-gray-500 dark:text-gray-400 hidden sm:block">
-                • {currentConversation.display_title}
+                • {currentConversation.title}
               </span>
             )}
           </div>
@@ -58,7 +58,7 @@ const Header: React.FC<HeaderProps> = ({
         <div className="flex-1 flex justify-center max-w-xs">
           {currentConversation && (
             <ModelSelector
-              currentModel={currentConversation.model}
+              currentModel={currentConversation.ai_model}
               onModelChange={changeModel}
             />
           )}

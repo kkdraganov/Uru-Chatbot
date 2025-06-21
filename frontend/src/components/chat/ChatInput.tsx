@@ -156,7 +156,7 @@ const ChatInput: React.FC<ChatInputProps> = ({ disabled = false }) => {
             </span>
             {currentConversation && (
               <span>
-                Model: {currentConversation.model}
+                Model: {currentConversation.ai_model}
               </span>
             )}
           </div>
