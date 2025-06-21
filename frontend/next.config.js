@@ -1,7 +1,10 @@
 /** @type {import('next').NextConfig} */
 
 // DEBUG: Log environment variables during Next.js config load (next.config.js:env_setup)
-console.log('[NEXT_CONFIG] NEXT_PUBLIC_API_URL from env:', process.env.NEXT_PUBLIC_API_URL);
+console.log(
+  '[NEXT_CONFIG] NEXT_PUBLIC_API_URL from env:',
+  process.env.NEXT_PUBLIC_API_URL,
+);
 console.log('[NEXT_CONFIG] INSTANCE from env:', process.env.INSTANCE);
 console.log('[NEXT_CONFIG] ENVIRONMENT from env:', process.env.ENVIRONMENT);
 
@@ -42,7 +45,7 @@ const nextConfig = {
       if (environment === 'production' && instance && instance !== 'dev') {
         instanceDomains = [
           `${instance}.uruenterprises.com`,
-          `api.${instance}.uruenterprises.com`
+          `api.${instance}.uruenterprises.com`,
         ];
       }
       // For development, don't add the production domains since they're not used
@@ -74,7 +77,7 @@ const nextConfig = {
           },
         ],
       },
-    ]
+    ];
   },
   // Handle crypto-js module
   webpack: (config, { isServer }) => {
@@ -87,7 +90,7 @@ const nextConfig = {
       };
     }
     return config;
-  }
-}
+  },
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

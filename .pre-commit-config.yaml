@@ -1,0 +1,154 @@
+# Pre-commit configuration for Uru Chatbot
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+
+repos:
+  # General file checks
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.5.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.md$'
+      - id: end-of-file-fixer
+      - id: check-yaml
+        args: ['--unsafe']
+      - id: check-json
+      - id: check-toml
+      - id: check-xml
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      - id: check-added-large-files
+        args: ['--maxkb=1000']
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: ['--fix=lf']
+
+  # Python: Ruff for linting and formatting
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.1.8
+    hooks:
+      # Run the linter
+      - id: ruff
+        args: [--fix]
+        files: ^backend/.*\.py$
+      # Run the formatter
+      - id: ruff-format
+        files: ^backend/.*\.py$
+
+  # Python: MyPy for type checking
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.7.1
+    hooks:
+      - id: mypy
+        files: ^backend/.*\.py$
+        additional_dependencies:
+          - types-requests
+          - types-python-jose
+          - types-passlib
+          - sqlalchemy[mypy]
+          - pydantic
+        args: [--config-file=pyproject.toml]
+
+  # Python: Bandit for security scanning
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.7.5
+    hooks:
+      - id: bandit
+        files: ^backend/.*\.py$
+        args: ['-c', 'pyproject.toml']
+
+  # Frontend: ESLint for linting
+  - repo: local
+    hooks:
+      - id: eslint
+        name: ESLint
+        entry: bash -c 'cd frontend && npm run lint:fix'
+        language: system
+        files: ^frontend/.*\.(js|jsx|ts|tsx)$
+        pass_filenames: false
+
+  # Frontend: Prettier for formatting
+  - repo: https://github.com/pre-commit/mirrors-prettier
+    rev: v3.1.0
+    hooks:
+      - id: prettier
+        files: ^frontend/.*\.(js|jsx|ts|tsx|json|css|scss|md|yaml|yml)$
+        additional_dependencies:
+          - prettier@^3.1.0
+
+  # TypeScript: Type checking
+  - repo: local
+    hooks:
+      - id: typescript-check
+        name: TypeScript Check
+        entry: bash -c 'cd frontend && npm run type-check'
+        language: system
+        files: ^frontend/.*\.(ts|tsx)$
+        pass_filenames: false
+
+  # Docker: Hadolint for Dockerfile linting
+  - repo: https://github.com/hadolint/hadolint
+    rev: v2.12.0
+    hooks:
+      - id: hadolint-docker
+        files: ^.*Dockerfile.*$
+
+  # Security: Trivy for vulnerability scanning
+  - repo: local
+    hooks:
+      - id: trivy-fs
+        name: Trivy filesystem scan
+        entry: trivy fs --exit-code 1 --severity HIGH,CRITICAL .
+        language: system
+        pass_filenames: false
+        stages: [manual]
+
+  # Custom: MCP tool validation
+  - repo: local
+    hooks:
+      - id: validate-mcp-schemas
+        name: Validate MCP Tool Schemas
+        entry: python scripts/validate_mcp_schemas.py
+        language: system
+        files: ^.*\.(py|json)$
+        pass_filenames: false
+
+  # Custom: Environment file validation
+  - repo: local
+    hooks:
+      - id: validate-env-files
+        name: Validate Environment Files
+        entry: bash -c 'scripts/validate_env_files.sh'
+        language: system
+        files: ^\.env.*$
+        pass_filenames: false
+
+  # Database: Alembic migration validation
+  - repo: local
+    hooks:
+      - id: validate-migrations
+        name: Validate Database Migrations
+        entry: bash -c 'cd backend/database && python -c "import alembic.config; alembic.config.main([\"check\"])"'
+        language: system
+        files: ^backend/database/migrations/.*\.py$
+        pass_filenames: false
+
+# Configuration for specific stages
+default_stages: [commit]
+fail_fast: false
+
+# Exclude patterns
+exclude: |
+  (?x)^(
+    .*/__pycache__/.*|
+    .*/node_modules/.*|
+    .*/\.next/.*|
+    .*/build/.*|
+    .*/dist/.*|
+    .*\.pyc|
+    .*\.pyo|
+    .*\.egg-info/.*|
+    .*/migrations/versions/.*\.py|
+    openapi\.json|
+    openapi_formatted\.json
+  )$

@@ -1,0 +1,42 @@
+# Development dependencies for Uru Chatbot backend
+# Install with: pip install -r requirements-dev.txt
+
+# Include production requirements
+-r requirements.txt
+
+# Code Quality & Linting
+ruff==0.1.8
+mypy==1.7.1
+bandit==1.7.5
+
+# Testing
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-cov==4.1.0
+pytest-mock==3.12.0
+httpx==0.25.2  # For testing FastAPI endpoints
+
+# Type stubs
+types-requests==2.31.0.10
+types-python-jose==3.3.4.8
+types-passlib==1.7.7.13
+
+# Pre-commit hooks
+pre-commit==3.5.0
+
+# Security scanning
+safety==2.3.5
+
+# Development utilities
+python-dotenv==1.0.0  # Already in main requirements but good to have explicit
+ipython==8.17.2
+ipdb==0.13.13
+
+# Database development
+alembic==1.12.1  # Already in main requirements
+psycopg2-binary==2.9.9  # Already in main requirements
+
+# Documentation
+mkdocs==1.5.3
+mkdocs-material==9.4.8
+mkdocs-mermaid2-plugin==1.1.1
